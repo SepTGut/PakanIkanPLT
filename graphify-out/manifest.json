@@ -1,0 +1,62 @@
+{
+  "D:\\MyCode\\PakanIkanPLT\\.vscode\\extensions.json": {
+    "mtime": 1781335323.33191,
+    "ast_hash": "41e5d8dec3ff179fe5aecb46632391ca",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\include\\config.h": {
+    "mtime": 1781333403.8636863,
+    "ast_hash": "84b55b010e7bc93c74c0c229f4e97561",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\display.cpp": {
+    "mtime": 1781333438.4243565,
+    "ast_hash": "2dba679d20e2392770edab99a5c02de8",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\display.h": {
+    "mtime": 1781333426.978638,
+    "ast_hash": "6b33372d28fb39b2d8a3e0a163e65169",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\feeding.cpp": {
+    "mtime": 1781333451.8812716,
+    "ast_hash": "04449ffae60671ea4279346e08b08918",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\feeding.h": {
+    "mtime": 1781333442.4948773,
+    "ast_hash": "045388bff22d2f5bfa8965ace345c922",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\main.cpp": {
+    "mtime": 1781333628.2205863,
+    "ast_hash": "b2e685d6a56beac522a16fad49c7a61a",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\rtc_manager.cpp": {
+    "mtime": 1781333422.5854256,
+    "ast_hash": "5d1ad8eaed599e93ef3ebc1d51aefab5",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\src\\rtc_manager.h": {
+    "mtime": 1781333408.118672,
+    "ast_hash": "f157dd5670f377fafee2c33cfdce083c",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\conversation-resume.md": {
+    "mtime": 1781333869.251063,
+    "ast_hash": "bf46b0a248d4d8a9b71b37242948cb0a",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\README.md": {
+    "mtime": 1781333540.4442348,
+    "ast_hash": "0b25e890b77977fc0a7965a5d6e915f6",
+    "semantic_hash": ""
+  },
+  "D:\\MyCode\\PakanIkanPLT\\resume.md": {
+    "mtime": 1781333526.6822312,
+    "ast_hash": "87d502e8c58eb6bee71b25e005959c4f",
+    "semantic_hash": ""
+  }
+}

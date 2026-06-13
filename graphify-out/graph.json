@@ -1,0 +1,959 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "extensions.json",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/.vscode/extensions.json",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_vscode_extensions_json",
+      "community": 5,
+      "norm_label": "extensions.json"
+    },
+    {
+      "label": "recommendations",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/.vscode/extensions.json",
+      "source_location": "L4",
+      "id": "vscode_extensions_recommendations",
+      "community": 5,
+      "norm_label": "recommendations"
+    },
+    {
+      "label": "unwantedRecommendations",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/.vscode/extensions.json",
+      "source_location": "L7",
+      "id": "vscode_extensions_unwantedrecommendations",
+      "community": 5,
+      "norm_label": "unwantedrecommendations"
+    },
+    {
+      "label": "config.h",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/include/config.h",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_include_config_h",
+      "community": 6,
+      "norm_label": "config.h"
+    },
+    {
+      "label": "display.cpp",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_cpp",
+      "community": 1,
+      "norm_label": "display.cpp"
+    },
+    {
+      "label": "initDisplay()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L8",
+      "id": "src_display_initdisplay",
+      "community": 1,
+      "norm_label": "initdisplay()"
+    },
+    {
+      "label": "updateDisplay()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L13",
+      "id": "src_display_updatedisplay",
+      "community": 2,
+      "norm_label": "updatedisplay()"
+    },
+    {
+      "label": "TimeData",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L13",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_cpp_timedata",
+      "community": 2,
+      "norm_label": "timedata"
+    },
+    {
+      "label": "display.h",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.h",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_h",
+      "community": 1,
+      "norm_label": "display.h"
+    },
+    {
+      "label": "feeding.cpp",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_cpp",
+      "community": 2,
+      "norm_label": "feeding.cpp"
+    },
+    {
+      "label": "initFeeding()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L8",
+      "id": "src_feeding_initfeeding",
+      "community": 1,
+      "norm_label": "initfeeding()"
+    },
+    {
+      "label": "startFeeding()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L13",
+      "id": "src_feeding_startfeeding",
+      "community": 2,
+      "norm_label": "startfeeding()"
+    },
+    {
+      "label": "updateFeeding()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L17",
+      "id": "src_feeding_updatefeeding",
+      "community": 2,
+      "norm_label": "updatefeeding()"
+    },
+    {
+      "label": "feeding.h",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.h",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_h",
+      "community": 2,
+      "norm_label": "feeding.h"
+    },
+    {
+      "label": "main.cpp",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_main_cpp",
+      "community": 1,
+      "norm_label": "main.cpp"
+    },
+    {
+      "label": "setup()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L10",
+      "id": "src_main_setup",
+      "community": 1,
+      "norm_label": "setup()"
+    },
+    {
+      "label": "loop()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L20",
+      "id": "src_main_loop",
+      "community": 2,
+      "norm_label": "loop()"
+    },
+    {
+      "label": "rtc_manager.cpp",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_cpp",
+      "community": 1,
+      "norm_label": "rtc_manager.cpp"
+    },
+    {
+      "label": "initRTC()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L6",
+      "id": "src_rtc_manager_initrtc",
+      "community": 1,
+      "norm_label": "initrtc()"
+    },
+    {
+      "label": "getCurrentTime()",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L14",
+      "id": "src_rtc_manager_getcurrenttime",
+      "community": 2,
+      "norm_label": "getcurrenttime()"
+    },
+    {
+      "label": "TimeData",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L14",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_cpp_timedata",
+      "community": 2,
+      "norm_label": "timedata"
+    },
+    {
+      "label": "rtc_manager.h",
+      "file_type": "code",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.h",
+      "source_location": "L1",
+      "id": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_h",
+      "community": 1,
+      "norm_label": "rtc_manager.h"
+    },
+    {
+      "label": "conversation-resume.md",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L1",
+      "id": "conversation_resume_md",
+      "community": 0,
+      "norm_label": "conversation-resume.md"
+    },
+    {
+      "label": "Conversation Resume: Pakan Ikan Otomatis PlatformIO Migration",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L1",
+      "id": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "community": 0,
+      "norm_label": "conversation resume: pakan ikan otomatis platformio migration"
+    },
+    {
+      "label": "\ud83d\udccc Project Overview",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L3",
+      "id": "pakanikanplt_conversation_resume_project_overview",
+      "community": 0,
+      "norm_label": "\ud83d\udccc project overview"
+    },
+    {
+      "label": "\ud83d\udee0\ufe0f Technical State",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L8",
+      "id": "pakanikanplt_conversation_resume_technical_state",
+      "community": 0,
+      "norm_label": "\ud83d\udee0\ufe0f technical state"
+    },
+    {
+      "label": "Hardware Configuration",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L9",
+      "id": "pakanikanplt_conversation_resume_hardware_configuration",
+      "community": 0,
+      "norm_label": "hardware configuration"
+    },
+    {
+      "label": "Software Architecture",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L16",
+      "id": "pakanikanplt_conversation_resume_software_architecture",
+      "community": 0,
+      "norm_label": "software architecture"
+    },
+    {
+      "label": "Key Improvements Made",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L24",
+      "id": "pakanikanplt_conversation_resume_key_improvements_made",
+      "community": 0,
+      "norm_label": "key improvements made"
+    },
+    {
+      "label": "\u2699\ufe0f Calibration & Settings",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L30",
+      "id": "pakanikanplt_conversation_resume_calibration_settings",
+      "community": 0,
+      "norm_label": "\u2699\ufe0f calibration & settings"
+    },
+    {
+      "label": "Servo Calibration",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L31",
+      "id": "pakanikanplt_conversation_resume_servo_calibration",
+      "community": 0,
+      "norm_label": "servo calibration"
+    },
+    {
+      "label": "Feeding Schedules",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L36",
+      "id": "pakanikanplt_conversation_resume_feeding_schedules",
+      "community": 0,
+      "norm_label": "feeding schedules"
+    },
+    {
+      "label": "\u26a0\ufe0f Known Issues & Notes",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L43",
+      "id": "pakanikanplt_conversation_resume_known_issues_notes",
+      "community": 0,
+      "norm_label": "\u26a0\ufe0f known issues & notes"
+    },
+    {
+      "label": "\ud83d\ude80 Next Steps for Resuming",
+      "file_type": "document",
+      "source_file": "conversation-resume.md",
+      "source_location": "L47",
+      "id": "pakanikanplt_conversation_resume_next_steps_for_resuming",
+      "community": 0,
+      "norm_label": "\ud83d\ude80 next steps for resuming"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "readme_md",
+      "community": 3,
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "Pakan Ikan Otomatis (Automatic Fish Feeder)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "id": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "community": 3,
+      "norm_label": "pakan ikan otomatis (automatic fish feeder)"
+    },
+    {
+      "label": "\ud83d\ude80 Features",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L5",
+      "id": "pakanikanplt_readme_features",
+      "community": 3,
+      "norm_label": "\ud83d\ude80 features"
+    },
+    {
+      "label": "\ud83d\udee0\ufe0f Hardware Requirements",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L12",
+      "id": "pakanikanplt_readme_hardware_requirements",
+      "community": 3,
+      "norm_label": "\ud83d\udee0\ufe0f hardware requirements"
+    },
+    {
+      "label": "\ud83d\udcc2 Project Structure (PlatformIO)",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L20",
+      "id": "pakanikanplt_readme_project_structure_platformio",
+      "community": 3,
+      "norm_label": "\ud83d\udcc2 project structure (platformio)"
+    },
+    {
+      "label": "\u2699\ufe0f Installation & Setup",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L28",
+      "id": "pakanikanplt_readme_installation_setup",
+      "community": 3,
+      "norm_label": "\u2699\ufe0f installation & setup"
+    },
+    {
+      "label": "\ud83d\udd27 Calibration",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": "L34",
+      "id": "pakanikanplt_readme_calibration",
+      "community": 3,
+      "norm_label": "\ud83d\udd27 calibration"
+    },
+    {
+      "label": "resume.md",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L1",
+      "id": "resume_md",
+      "community": 4,
+      "norm_label": "resume.md"
+    },
+    {
+      "label": "Project Resume: Pakan Ikan Otomatis (Automatic Fish Feeder)",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L1",
+      "id": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "community": 4,
+      "norm_label": "project resume: pakan ikan otomatis (automatic fish feeder)"
+    },
+    {
+      "label": "Project Overview",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L3",
+      "id": "pakanikanplt_resume_project_overview",
+      "community": 4,
+      "norm_label": "project overview"
+    },
+    {
+      "label": "Technical Specifications",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L6",
+      "id": "pakanikanplt_resume_technical_specifications",
+      "community": 4,
+      "norm_label": "technical specifications"
+    },
+    {
+      "label": "Key Features",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L13",
+      "id": "pakanikanplt_resume_key_features",
+      "community": 4,
+      "norm_label": "key features"
+    },
+    {
+      "label": "Hardware Configuration",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L23",
+      "id": "pakanikanplt_resume_hardware_configuration",
+      "community": 4,
+      "norm_label": "hardware configuration"
+    },
+    {
+      "label": "Software Architecture (Modular)",
+      "file_type": "document",
+      "source_file": "resume.md",
+      "source_location": "L28",
+      "id": "pakanikanplt_resume_software_architecture_modular",
+      "community": 4,
+      "norm_label": "software architecture (modular)"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/.vscode/extensions.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_vscode_extensions_json",
+      "target": "vscode_extensions_recommendations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/.vscode/extensions.json",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_vscode_extensions_json",
+      "target": "vscode_extensions_unwantedrecommendations",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_cpp",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_cpp",
+      "target": "src_display_initdisplay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_cpp",
+      "target": "src_display_updatedisplay",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_main_setup",
+      "target": "src_display_initdisplay"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.cpp",
+      "source_location": "L13",
+      "weight": 1.0,
+      "context": "parameter_type",
+      "source": "src_display_updatedisplay",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_cpp_timedata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L33",
+      "weight": 1.0,
+      "source": "src_main_loop",
+      "target": "src_display_updatedisplay"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/display.h",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_h",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_main_cpp",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_display_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_cpp",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_cpp",
+      "target": "src_feeding_initfeeding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_cpp",
+      "target": "src_feeding_startfeeding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/feeding.cpp",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_cpp",
+      "target": "src_feeding_updatefeeding",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "src_main_setup",
+      "target": "src_feeding_initfeeding"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L41",
+      "weight": 1.0,
+      "source": "src_main_loop",
+      "target": "src_feeding_startfeeding"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L58",
+      "weight": 1.0,
+      "source": "src_main_loop",
+      "target": "src_feeding_updatefeeding"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_main_cpp",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_feeding_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_main_cpp",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_main_cpp",
+      "target": "src_main_loop",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_main_cpp",
+      "target": "src_main_setup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "src_main_setup",
+      "target": "src_rtc_manager_initrtc"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/main.cpp",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "src_main_loop",
+      "target": "src_rtc_manager_getcurrenttime"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_cpp",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_h",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_cpp",
+      "target": "src_rtc_manager_getcurrenttime",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_cpp",
+      "target": "src_rtc_manager_initrtc",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "source_file": "D:/MyCode/Pakan-Ikan-Otomatis-Arduino/PlatformIO_Project/src/rtc_manager.cpp",
+      "source_location": "L14",
+      "weight": 1.0,
+      "context": "return_type",
+      "source": "src_rtc_manager_getcurrenttime",
+      "target": "d_mycode_pakan_ikan_otomatis_arduino_platformio_project_src_rtc_manager_cpp_timedata",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "conversation_resume_md",
+      "target": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L30",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "target": "pakanikanplt_conversation_resume_calibration_settings",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L43",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "target": "pakanikanplt_conversation_resume_known_issues_notes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "target": "pakanikanplt_conversation_resume_next_steps_for_resuming",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "target": "pakanikanplt_conversation_resume_project_overview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_conversation_resume_pakan_ikan_otomatis_platformio_migration",
+      "target": "pakanikanplt_conversation_resume_technical_state",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_technical_state",
+      "target": "pakanikanplt_conversation_resume_hardware_configuration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_technical_state",
+      "target": "pakanikanplt_conversation_resume_key_improvements_made",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_technical_state",
+      "target": "pakanikanplt_conversation_resume_software_architecture",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_calibration_settings",
+      "target": "pakanikanplt_conversation_resume_feeding_schedules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "conversation-resume.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "pakanikanplt_conversation_resume_calibration_settings",
+      "target": "pakanikanplt_conversation_resume_servo_calibration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "readme_md",
+      "target": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L34",
+      "weight": 1.0,
+      "source": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_readme_calibration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_readme_features",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_readme_hardware_requirements",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_readme_installation_setup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "README.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "pakanikanplt_readme_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_readme_project_structure_platformio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resume.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "resume_md",
+      "target": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resume.md",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_resume_hardware_configuration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resume.md",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_resume_key_features",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resume.md",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_resume_project_overview",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resume.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_resume_software_architecture_modular",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "resume.md",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "pakanikanplt_resume_project_resume_pakan_ikan_otomatis_automatic_fish_feeder",
+      "target": "pakanikanplt_resume_technical_specifications",
+      "confidence_score": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "built_at_commit": "12e5351ece604ec5335c9a3159b523b246eb4273"
+}
