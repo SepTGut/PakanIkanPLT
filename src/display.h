@@ -7,5 +7,6 @@
 
 void initDisplay();
 void updateDisplay(const TimeData& time);
+void showRTCError();
 
 #endif

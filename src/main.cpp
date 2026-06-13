@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <avr/wdt.h>
 #include "config.h"
 #include "rtc_manager.h"
 #include "display.h"
@@ -6,6 +7,9 @@
 
 bool buttonState = false;
 bool lastButtonState = false;
+bool buttonPressedFlag = false;
+unsigned long lastDebounceTime = 0;
+const unsigned long DEBOUNCE_DELAY = 50;
 
 void setup() {
     Serial.begin(9600);
@@ -15,10 +19,53 @@ void setup() {
     initFeeding();
 
     pinMode(BUTTON_PIN, INPUT_PULLUP);
+    wdt_enable(WDTO_2S);
+
+    // Check for missed feeds on boot
+    if (isRTCValid()) {
+        TimeData now = getCurrentTime();
+        int missedSession = checkMissedFeeds(now);
+        if (missedSession != -1) {
+            Serial.print("Missed feed detected for session ");
+            Serial.println(missedSession);
+            startFeeding(JUMLAH_PAKAN);
+            markFeedingComplete(now, missedSession);
+        }
+    }
+}
+
+void handleManualButton() {
+    buttonState = digitalRead(BUTTON_PIN);
+    if (buttonState != lastButtonState) {
+        lastDebounceTime = millis();
+    }
+
+    if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
+        if (buttonState == LOW) {
+            if (!buttonPressedFlag) {
+                Serial.println("Button pressed - Kasih pakan manual");
+                startFeeding(JUMLAH_PAKAN);
+                buttonPressedFlag = true;
+            }
+        } else {
+            buttonPressedFlag = false;
+        }
+    }
+    lastButtonState = buttonState;
 }
 
 void loop() {
-    // 1. Update Time Data
+    wdt_reset();
+
+    if (!isRTCValid()) {
+        Serial.println("RTC Error: Invalid or missing time data");
+        showRTCError();
+        handleManualButton();
+        updateFeeding();
+        return;
+    }
+
+    // 1. Update Time Data (Cached inside rtc_manager)
     TimeData currentTime = getCurrentTime();
 
     // 2. Log to Serial
@@ -33,23 +80,22 @@ void loop() {
     updateDisplay(currentTime);
 
     // 4. Manual Button Check
-    buttonState = digitalRead(BUTTON_PIN);
-    if (buttonState == LOW && lastButtonState == HIGH) {
-        delay(50); // basic debounce
-        if (digitalRead(BUTTON_PIN) == LOW) {
-            Serial.println("Button pressed - Kasih pakan manual");
-            startFeeding(JUMLAH_PAKAN);
-        }
-    }
-    lastButtonState = buttonState;
+    handleManualButton();
 
     // 5. Automatic Feeding Triggers
     static int lastTriggerSecond = -1;
     if (currentTime.second != lastTriggerSecond) {
-        if ((currentTime.hour == JAM_PAGI && currentTime.minute == MENIT_PAGI && currentTime.second == 1) ||
-            (currentTime.hour == JAM_SIANG && currentTime.minute == MENIT_SIANG && currentTime.second == 1) ||
-            (currentTime.hour == JAM_SORE && currentTime.minute == MENIT_SORE && currentTime.second == 1)) {
-            startFeeding(JUMLAH_PAKAN);
+        for (int s = 0; s < NUM_SESSIONS; s++) {
+            if (currentTime.hour == SCHEDULE[s].hour &&
+                currentTime.minute == SCHEDULE[s].minute &&
+                !hasFedToday(currentTime, s)) {
+
+                Serial.print("Automatic feeding triggered for session ");
+                Serial.println(s);
+                startFeeding(JUMLAH_PAKAN);
+                markFeedingComplete(currentTime, s);
+                break; // Trigger only one session per second
+            }
         }
         lastTriggerSecond = currentTime.second;
     }

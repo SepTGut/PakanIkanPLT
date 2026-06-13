@@ -1,16 +1,37 @@
 #include "feeding.h"
 #include "config.h"
+#include <EEPROM.h>
 
 Servo servoMekanik;
 int feedCyclesRemaining = 0;
 unsigned long lastServoMillis = 0;
 
+struct FeedingState {
+    uint8_t day;
+    uint8_t month;
+    uint16_t year;
+    uint8_t session; // 0: Morning, 1: Afternoon, 2: Evening, 255: None
+} state;
+
+void saveState() {
+    EEPROM.put(0, state);
+}
+
+FeedingState loadState() {
+    FeedingState loaded;
+    EEPROM.get(0, loaded);
+    return loaded;
+}
+
 void initFeeding() {
     servoMekanik.attach(SERVO_PIN);
     servoMekanik.write(0);
+    delay(100); // Give it time to move
+    servoMekanik.detach();
 }
 
 void startFeeding(int jumlah) {
+    servoMekanik.attach(SERVO_PIN);
     feedCyclesRemaining = jumlah * 2;
 }
 
@@ -24,5 +45,49 @@ void updateFeeding() {
             servoMekanik.write(0);   // CLOSED
         }
         feedCyclesRemaining--;
+        if (feedCyclesRemaining == 0) {
+            servoMekanik.detach();
+        }
     }
+}
+
+void markFeedingComplete(TimeData time, int session) {
+    state.day = time.day;
+    state.month = time.month;
+    state.year = time.year;
+    state.session = session;
+    saveState();
+    Serial.print("Feeding recorded in EEPROM for session ");
+    Serial.println(session);
+}
+
+bool hasFedToday(TimeData time, int session) {
+    FeedingState last = loadState();
+    if (last.day == time.day && last.month == time.month && last.year == time.year && last.session == session) {
+        return true;
+    }
+    return false;
+}
+
+int checkMissedFeeds(TimeData time) {
+    FeedingState last = loadState();
+
+    // Only check if the last feed was not today or was an earlier session today
+    bool todaySame = (last.day == time.day && last.month == time.month && last.year == time.year);
+
+    int missedSession = -1;
+    for (int s = 0; s < NUM_SESSIONS; s++) {
+        int schedHour = SCHEDULE[s].hour;
+        int schedMin = SCHEDULE[s].minute;
+
+        if (time.hour > schedHour || (time.hour == schedHour && time.minute >= schedMin)) {
+            // This session should have happened
+            if (last.session == 255) {
+                missedSession = s;
+            } else if (!todaySame || last.session < s) {
+                missedSession = s;
+            }
+        }
+    }
+    return missedSession;
 }

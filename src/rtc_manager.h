@@ -15,6 +15,7 @@ struct TimeData {
 };
 
 void initRTC();
+bool isRTCValid();
 TimeData getCurrentTime();
 
 #endif

@@ -10,19 +10,25 @@
 // Display Settings
 const long DISPLAY_INTERVAL = 3000;
 
+// Feeding Schedule Structure
+struct FeedingSession {
+    const char* label;
+    int hour;
+    int minute;
+};
+
 // Feeding Schedules
-const int JAM_PAGI = 6;
-const int MENIT_PAGI = 0;
-const int JAM_SIANG = 12;
-const int MENIT_SIANG = 0;
-const int JAM_SORE = 18;
-const int MENIT_SORE = 0;
+// You can add or remove sessions here. The system automatically adapts.
+const FeedingSession SCHEDULE[] = {
+    {"Pagi", 6, 0},
+    {"Siang", 12, 0},
+    {"Sore", 18, 0}
+};
+
+const int NUM_SESSIONS = sizeof(SCHEDULE) / sizeof(SCHEDULE[0]);
 const int JUMLAH_PAKAN = 15;
 
 // Labels
-const char* const LABEL_PAGI = "Pagi";
-const char* const LABEL_SIANG = "Siang";
-const char* const LABEL_SORE = "Sore";
 const char* const DAYS_OF_THE_WEEK[7] = {"Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"};
 
 #endif
