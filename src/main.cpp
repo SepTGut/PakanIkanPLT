@@ -4,6 +4,7 @@
 #include "rtc_manager.h"
 #include "display.h"
 #include "feeding.h"
+#include "state_debug.h"
 
 bool buttonState = false;
 bool lastButtonState = false;
@@ -15,6 +16,8 @@ void setup() {
     Serial.begin(9600);
 
     initRTC();
+    // Prime the RTC cache and set the validity flag immediately
+    getCurrentTime();
     initDisplay();
     initFeeding();
 
@@ -75,24 +78,30 @@ void loop() {
     // 1. Update Time Data (Cached inside rtc_manager)
     TimeData currentTime = getCurrentTime();
 
-    // 2. Log to Serial
-    char serialBuffer[64];
-    snprintf(serialBuffer, sizeof(serialBuffer), "%s, %02d-%02d-%d", currentTime.dayName, currentTime.day, currentTime.month, currentTime.year);
-    Serial.println(serialBuffer);
-    snprintf(serialBuffer, sizeof(serialBuffer), "%02d:%02d:%02d", currentTime.hour, currentTime.minute, currentTime.second);
-    Serial.println(serialBuffer);
-    Serial.println();
+    // Serial logging of date/time removed to avoid unsolicited output
 
     // 3. Update Display
     updateDisplay(currentTime);
 
     // 4. Manual Button Check
     handleManualButton();
+    // Serial command for debugging: press 's' to dump full system state
+    if (Serial.available() > 0) {
+        char cmd = Serial.read();
+        // Debug command: 's'/'S' – dump full system state
+        // Trigger command: 'p'/'P' – also dump system state for on‑demand debugging
+        // Test servo command: 't'/'T'
+        if (cmd == 's' || cmd == 'S' || cmd == 'p' || cmd == 'P') {
+            printSystemState();
+        } else if (cmd == 't' || cmd == 'T') {
+            testServo();
+        }
+    }
 
     // 5. Automatic Feeding Triggers
     static int lastTriggerSecond = -1;
     if (currentTime.second != lastTriggerSecond) {
-        for (int s = 0; s < NUM_SESSIONS; s++) {
+        for (size_t s = 0; s < (size_t)NUM_SESSIONS; s++) {
             if (currentTime.hour == SCHEDULE[s].hour &&
                 currentTime.minute == SCHEDULE[s].minute &&
                 !hasFedToday(currentTime, s)) {

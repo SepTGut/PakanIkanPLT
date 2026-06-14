@@ -11,6 +11,8 @@ void showRTCError() {
     lcd.print("RTC Error!");
     lcd.setCursor(0, 1);
     lcd.print("Check Hardware");
+    // Also output the error to the serial console for debugging
+    Serial.println("RTC Error! Check Hardware (display message)");
 }
 
 void initDisplay() {

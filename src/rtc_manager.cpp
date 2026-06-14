@@ -15,6 +15,23 @@ void initRTC() {
         return;
     }
     rtcInitialized = true;
+    // After successful init, read the current time once to prime the cache and set validity.
+    DateTime now = rtc.now();
+    // Basic sanity check – year reasonable range
+    if (now.year() >= 2000 && now.year() <= 2100) {
+        rtcValidFlag = true;
+    } else {
+        rtcValidFlag = false;
+    }
+    // Populate cachedTime with the initial read
+    cachedTime.hour = now.hour();
+    cachedTime.minute = now.minute();
+    cachedTime.second = now.second();
+    cachedTime.day = now.day();
+    cachedTime.month = now.month();
+    cachedTime.year = now.year();
+    cachedTime.dayName = DAYS_OF_THE_WEEK[now.dayOfTheWeek()];
+    lastUpdate = millis();
     // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 }
 

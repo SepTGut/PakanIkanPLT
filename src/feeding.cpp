@@ -6,12 +6,7 @@ Servo servoMekanik;
 int feedCyclesRemaining = 0;
 unsigned long lastServoMillis = 0;
 
-struct FeedingState {
-    uint8_t day;
-    uint8_t month;
-    uint16_t year;
-    uint8_t session; // 0: Morning, 1: Afternoon, 2: Evening, 255: None
-} state;
+FeedingState state;
 
 void saveState() {
     // Only write to EEPROM if the state actually changed to reduce wear.
@@ -69,6 +64,20 @@ void markFeedingComplete(TimeData time, int session) {
     Serial.println(session);
 }
 
+// Test the feeding servo: moves to OPEN then CLOSED positions
+void testServo() {
+    Serial.println(F("Testing servo…"));
+    servoMekanik.attach(SERVO_PIN);
+    // Open position
+    servoMekanik.write(150);
+    delay(500);
+    // Closed position
+    servoMekanik.write(0);
+    delay(500);
+    servoMekanik.detach();
+    Serial.println(F("Servo test complete"));
+}
+
 bool hasFedToday(TimeData time, int session) {
     FeedingState last = loadState();
     // Cast time fields to unsigned types to match FeedingState members and avoid signed/unsigned warnings
@@ -85,7 +94,9 @@ int checkMissedFeeds(TimeData time) {
     FeedingState last = loadState();
 
     // Only check if the last feed was not today or was an earlier session today
-    bool todaySame = (last.day == time.day && last.month == time.month && last.year == time.year);
+    bool todaySame = (last.day == (uint8_t)time.day &&
+                        last.month == (uint8_t)time.month &&
+                        last.year == (uint16_t)time.year);
 
     int missedSession = -1;
     for (size_t s = 0; s < (size_t)NUM_SESSIONS; s++) {
