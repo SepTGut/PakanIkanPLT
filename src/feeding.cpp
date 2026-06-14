@@ -14,7 +14,15 @@ struct FeedingState {
 } state;
 
 void saveState() {
-    EEPROM.put(0, state);
+    // Only write to EEPROM if the state actually changed to reduce wear.
+    FeedingState existing;
+    EEPROM.get(0, existing);
+    if (existing.day != state.day ||
+        existing.month != state.month ||
+        existing.year != state.year ||
+        existing.session != state.session) {
+        EEPROM.put(0, state);
+    }
 }
 
 FeedingState loadState() {
@@ -63,7 +71,11 @@ void markFeedingComplete(TimeData time, int session) {
 
 bool hasFedToday(TimeData time, int session) {
     FeedingState last = loadState();
-    if (last.day == time.day && last.month == time.month && last.year == time.year && last.session == session) {
+    // Cast time fields to unsigned types to match FeedingState members and avoid signed/unsigned warnings
+    if (last.day == (uint8_t)time.day &&
+        last.month == (uint8_t)time.month &&
+        last.year == (uint16_t)time.year &&
+        last.session == (uint8_t)session) {
         return true;
     }
     return false;
@@ -76,7 +88,7 @@ int checkMissedFeeds(TimeData time) {
     bool todaySame = (last.day == time.day && last.month == time.month && last.year == time.year);
 
     int missedSession = -1;
-    for (int s = 0; s < NUM_SESSIONS; s++) {
+    for (size_t s = 0; s < (size_t)NUM_SESSIONS; s++) {
         int schedHour = SCHEDULE[s].hour;
         int schedMin = SCHEDULE[s].minute;
 

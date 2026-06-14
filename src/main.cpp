@@ -56,13 +56,20 @@ void handleManualButton() {
 
 void loop() {
     wdt_reset();
+    static bool rtcErrorDisplayed = false;
 
     if (!isRTCValid()) {
-        Serial.println("RTC Error: Invalid or missing time data");
-        showRTCError();
+        if (!rtcErrorDisplayed) {
+            Serial.println("RTC Error: Invalid or missing time data");
+            showRTCError();
+            rtcErrorDisplayed = true;
+        }
         handleManualButton();
         updateFeeding();
         return;
+    } else {
+        // RTC is valid again; reset error flag so future errors are reported
+        rtcErrorDisplayed = false;
     }
 
     // 1. Update Time Data (Cached inside rtc_manager)
