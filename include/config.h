@@ -11,17 +11,17 @@
 #ifdef ARDUINO_ARCH_ESP32
     // ESP32 WROOM / C3 Pins
     #define BUTTON_PIN 0        
-    #define SERVO_PIN 18       
+    #define SERVO_PIN 18           
     #define BUZZER_1_PIN 19     // Status Buzzer
     #define BUZZER_2_PIN 21     // Alert Buzzer
     #define IR_SENSOR_PIN 22    // Food Level Sensor
 #else
     // Arduino Uno Pins
-    #define BUTTON_PIN 5
+    #define BUTTON_PIN 2
     #define SERVO_PIN 4
-    #define BUZZER_1_PIN 6
-    #define BUZZER_2_PIN 7
-    #define IR_SENSOR_PIN 8
+    #define BUZZER_1_PIN 5
+    #define BUZZER_2_PIN 6
+    #define IR_SENSOR_PIN 3
 #endif
 
 // --- Feature Toggles ---
@@ -51,7 +51,7 @@ const FeedingSession SCHEDULE[] = {
 };
 
 const int NUM_SESSIONS = sizeof(SCHEDULE) / sizeof(SCHEDULE[0]);
-const int JUMLAH_PAKAN = 300;
+const int JUMLAH_PAKAN = 100;
 
 // Labels
 const char* const DAYS_OF_THE_WEEK[7] = {"Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"};
