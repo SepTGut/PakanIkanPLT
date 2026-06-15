@@ -653,8 +653,8 @@ void updateDisplay(const TimeData& time) {
 
     if (time.second != lastSecond) {
         lcd.setCursor(0, 1);
-        char timeStr[9];
-        snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d", time.hour, time.minute, time.second);
+        char timeStr[17];
+        snprintf(timeStr, sizeof(timeStr), "%02d:%02d:%02d          ", time.hour, time.minute, time.second);
         lcd.print(timeStr);
         lastSecond = time.second;
     }
