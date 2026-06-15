@@ -2,9 +2,9 @@
 │                                                  │ Tips for getting started  │
 │                   Welcome back!                  │ Run /init to create a CL… │
 │                                                  │ ───────────────────────── │
-│                      ▐▛███▜▌                     │ What's new                │
-│                     ▝▜█████▛▘                    │ Session titles are now g… │
-│                       ▘▘ ▝▝                      │ Added `footerLinksRegexe… │
+│                    ▐▛███▜▌                     │ What's new                │
+│                  ▝▜█████▛▘                    │ Session titles are now g… │
+│                    ▘▘ ▝▝                      │ Added `footerLinksRegexe… │
 │                                                  │ Improved Bedrock credent… │
 │   openai/gpt-oss-120b:free · API Usage Billing   │ /release-notes for more   │
 │              D:\MyCode\PakanIkanPLT              │                           │

@@ -1,4 +1,4 @@
- #ifndef CONFIG_H
+#ifndef CONFIG_H
 #define CONFIG_H
 
 #include <Arduino.h>
@@ -6,6 +6,10 @@
 // Pin Definitions
 #define BUTTON_PIN 5
 #define SERVO_PIN 4
+
+// Servo Settings
+#define SERVO_OPEN 150
+#define SERVO_CLOSED 0
 
 // Display Settings
 const long DISPLAY_INTERVAL = 3000;
@@ -18,7 +22,6 @@ struct FeedingSession {
 };
 
 // Feeding Schedules
-// You can add or remove sessions here. The system automatically adapts.
 const FeedingSession SCHEDULE[] = {
     {"Pagi", 6, 0},
     {"Siang", 12, 0},

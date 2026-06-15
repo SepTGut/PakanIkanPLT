@@ -12,24 +12,34 @@ bool buttonPressedFlag = false;
 unsigned long lastDebounceTime = 0;
 const unsigned long DEBOUNCE_DELAY = 50;
 
+static const unsigned long IDLE_TIMEOUT = 10000;
+static unsigned long lastActivityTime = 0;
+
+static void markActivity() {
+    lastActivityTime = millis();
+    if (isIdleAnimating()) stopIdleAnimation();
+}
+
 void setup() {
     Serial.begin(9600);
 
     initRTC();
-    // Prime the RTC cache and set the validity flag immediately
     getCurrentTime();
     initDisplay();
+
+    playCopyrightAnimation();
     initFeeding();
 
     pinMode(BUTTON_PIN, INPUT_PULLUP);
     wdt_enable(WDTO_2S);
 
-    // Check for missed feeds on boot
+    lastActivityTime = millis();
+
     if (isRTCValid()) {
         TimeData now = getCurrentTime();
         int missedSession = checkMissedFeeds(now);
         if (missedSession != -1) {
-            Serial.print("Missed feed detected for session ");
+            Serial.print(F("Missed feed detected for session "));
             Serial.println(missedSession);
             startFeeding(JUMLAH_PAKAN);
             markFeedingComplete(now, missedSession);
@@ -46,7 +56,8 @@ void handleManualButton() {
     if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
         if (buttonState == LOW) {
             if (!buttonPressedFlag) {
-                Serial.println("Button pressed - Kasih pakan manual");
+                Serial.println(F("Button pressed - Kasih pakan manual"));
+                markActivity();
                 startFeeding(JUMLAH_PAKAN);
                 buttonPressedFlag = true;
             }
@@ -63,7 +74,7 @@ void loop() {
 
     if (!isRTCValid()) {
         if (!rtcErrorDisplayed) {
-            Serial.println("RTC Error: Invalid or missing time data");
+            Serial.println(F("RTC Error: Invalid or missing time data"));
             showRTCError();
             rtcErrorDisplayed = true;
         }
@@ -71,26 +82,15 @@ void loop() {
         updateFeeding();
         return;
     } else {
-        // RTC is valid again; reset error flag so future errors are reported
         rtcErrorDisplayed = false;
     }
 
-    // 1. Update Time Data (Cached inside rtc_manager)
     TimeData currentTime = getCurrentTime();
-
-    // Serial logging of date/time removed to avoid unsolicited output
-
-    // 3. Update Display
-    updateDisplay(currentTime);
-
-    // 4. Manual Button Check
     handleManualButton();
-    // Serial command for debugging: press 's' to dump full system state
+
     if (Serial.available() > 0) {
         char cmd = Serial.read();
-        // Debug command: 's'/'S' – dump full system state
-        // Trigger command: 'p'/'P' – also dump system state for on‑demand debugging
-        // Test servo command: 't'/'T'
+        markActivity();
         if (cmd == 's' || cmd == 'S' || cmd == 'p' || cmd == 'P') {
             printSystemState();
         } else if (cmd == 't' || cmd == 'T') {
@@ -98,7 +98,6 @@ void loop() {
         }
     }
 
-    // 5. Automatic Feeding Triggers
     static int lastTriggerSecond = -1;
     if (currentTime.second != lastTriggerSecond) {
         for (size_t s = 0; s < (size_t)NUM_SESSIONS; s++) {
@@ -106,16 +105,26 @@ void loop() {
                 currentTime.minute == SCHEDULE[s].minute &&
                 !hasFedToday(currentTime, s)) {
 
-                Serial.print("Automatic feeding triggered for session ");
+                Serial.print(F("Automatic feeding triggered for session "));
                 Serial.println(s);
+                markActivity();
                 startFeeding(JUMLAH_PAKAN);
                 markFeedingComplete(currentTime, s);
-                break; // Trigger only one session per second
+                break;
             }
         }
         lastTriggerSecond = currentTime.second;
     }
 
-    // 6. Update Servo State Machine
+    updateDisplay(currentTime);
+
+    unsigned long now = millis();
+    if (!isIdleAnimating() && (now - lastActivityTime >= IDLE_TIMEOUT)) {
+        startIdleAnimation();
+    }
+    if (isIdleAnimating()) {
+        updateIdleAnimation();
+    }
+
     updateFeeding();
 }

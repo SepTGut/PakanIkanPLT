@@ -9,4 +9,15 @@ void initDisplay();
 void updateDisplay(const TimeData& time);
 void showRTCError();
 
+// Copyright / splash screen (full-screen, blocking)
+void showCopyright();
+void playCopyrightAnimation();
+
+// Idle animation — non-call, runs on bottom row only
+// Clock/schedule always stays on top row undisturbed
+void startIdleAnimation();
+void updateIdleAnimation();
+void stopIdleAnimation();
+bool isIdleAnimating();
+
 #endif

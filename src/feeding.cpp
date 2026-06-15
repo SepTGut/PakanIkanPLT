@@ -1,5 +1,6 @@
 #include "feeding.h"
 #include "config.h"
+#include "display.h"
 #include <EEPROM.h>
 
 Servo servoMekanik;
@@ -28,12 +29,16 @@ FeedingState loadState() {
 
 void initFeeding() {
     servoMekanik.attach(SERVO_PIN);
-    servoMekanik.write(0);
+    servoMekanik.write(SERVO_CLOSED);
     delay(100); // Give it time to move
     servoMekanik.detach();
 }
 
 void startFeeding(int jumlah) {
+    // Show copyright splash at the start of every feeding
+    showCopyright();
+    delay(500);
+
     servoMekanik.attach(SERVO_PIN);
     feedCyclesRemaining = jumlah * 2;
 }
@@ -43,9 +48,9 @@ void updateFeeding() {
     if (millis() - lastServoMillis >= 100) {
         lastServoMillis = millis();
         if (feedCyclesRemaining % 2 == 0) {
-            servoMekanik.write(150); // OPEN
+            servoMekanik.write(SERVO_OPEN);
         } else {
-            servoMekanik.write(0);   // CLOSED
+            servoMekanik.write(SERVO_CLOSED);
         }
         feedCyclesRemaining--;
         if (feedCyclesRemaining == 0) {
@@ -60,19 +65,16 @@ void markFeedingComplete(TimeData time, int session) {
     state.year = time.year;
     state.session = session;
     saveState();
-    Serial.print("Feeding recorded in EEPROM for session ");
+    Serial.print(F("Feeding recorded in EEPROM for session "));
     Serial.println(session);
 }
 
-// Test the feeding servo: moves to OPEN then CLOSED positions
 void testServo() {
-    Serial.println(F("Testing servo…"));
+    Serial.println(F("Testing servo..."));
     servoMekanik.attach(SERVO_PIN);
-    // Open position
-    servoMekanik.write(150);
+    servoMekanik.write(SERVO_OPEN);
     delay(500);
-    // Closed position
-    servoMekanik.write(0);
+    servoMekanik.write(SERVO_CLOSED);
     delay(500);
     servoMekanik.detach();
     Serial.println(F("Servo test complete"));
@@ -80,7 +82,6 @@ void testServo() {
 
 bool hasFedToday(TimeData time, int session) {
     FeedingState last = loadState();
-    // Cast time fields to unsigned types to match FeedingState members and avoid signed/unsigned warnings
     if (last.day == (uint8_t)time.day &&
         last.month == (uint8_t)time.month &&
         last.year == (uint16_t)time.year &&
@@ -93,7 +94,6 @@ bool hasFedToday(TimeData time, int session) {
 int checkMissedFeeds(TimeData time) {
     FeedingState last = loadState();
 
-    // Only check if the last feed was not today or was an earlier session today
     bool todaySame = (last.day == (uint8_t)time.day &&
                         last.month == (uint8_t)time.month &&
                         last.year == (uint16_t)time.year);
@@ -104,7 +104,6 @@ int checkMissedFeeds(TimeData time) {
         int schedMin = SCHEDULE[s].minute;
 
         if (time.hour > schedHour || (time.hour == schedHour && time.minute >= schedMin)) {
-            // This session should have happened
             if (last.session == 255) {
                 missedSession = s;
             } else if (!todaySame || last.session < s) {
