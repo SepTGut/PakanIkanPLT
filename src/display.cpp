@@ -597,14 +597,11 @@ void showCopyright() {
 }
 
 void playCopyrightAnimation() {
-    lcd.noBacklight(); 
-    delay(200); 
     int rounds = 3 + fastRandom(3);
     for (int i = 0; i < rounds; i++) playRandomAnimation();
-    lcd.backlight(); 
-    lcd.clear(); 
-    showCopyright(); 
-    delay(1500); 
+    lcd.clear();
+    showCopyright();
+    delay(1500);
     lcd.clear();
 }
 
