@@ -109,18 +109,36 @@ int checkMissedFeeds(TimeData time) {
                         last.month == (uint8_t)time.month &&
                         last.year == (uint16_t)time.year);
 
-    int missedSession = -1;
-    for (size_t s = 0; s < (size_t)NUM_SESSIONS; s++) {
-        int schedHour = SCHEDULE[s].hour;
-        int schedMin = SCHEDULE[s].minute;
-
-        if (time.hour > schedHour || (time.hour == schedHour && time.minute >= schedMin)) {
-            if (last.session == 255) {
-                missedSession = s;
-            } else if (!todaySame || last.session < s) {
-                missedSession = s;
+    // If no feeding has ever been recorded (session == 255 means None),
+    // return the first session that has passed.
+    if (last.session == 255) {
+        for (int s = 0; s < NUM_SESSIONS; s++) {
+            if (time.hour > SCHEDULE[s].hour ||
+                (time.hour == SCHEDULE[s].hour && time.minute >= SCHEDULE[s].minute)) {
+                return s;
             }
         }
+        return -1;
     }
-    return missedSession;
+
+    // If last feeding was on a different day, find first session that has passed
+    if (!todaySame) {
+        for (int s = 0; s < NUM_SESSIONS; s++) {
+            if (time.hour > SCHEDULE[s].hour ||
+                (time.hour == SCHEDULE[s].hour && time.minute >= SCHEDULE[s].minute)) {
+                return s;
+            }
+        }
+        return -1;
+    }
+
+    // Same day: find first session after the last fed session that has passed
+    for (int s = last.session + 1; s < NUM_SESSIONS; s++) {
+        if (time.hour > SCHEDULE[s].hour ||
+            (time.hour == SCHEDULE[s].hour && time.minute >= SCHEDULE[s].minute)) {
+            return s;
+        }
+    }
+
+    return -1;
 }
