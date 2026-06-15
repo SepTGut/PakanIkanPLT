@@ -9,8 +9,10 @@ unsigned long lastServoMillis = 0;
 
 FeedingState state;
 
+// Forward declaration for buzzer alerts
+void playAlert(int buzzerNum, int durationMs);
+
 void saveState() {
-    // Only write to EEPROM if the state actually changed to reduce wear.
     FeedingState existing;
     EEPROM.get(0, existing);
     if (existing.day != state.day ||
@@ -18,6 +20,9 @@ void saveState() {
         existing.year != state.year ||
         existing.session != state.session) {
         EEPROM.put(0, state);
+        #ifdef ARDUINO_ARCH_ESP32
+        EEPROM.commit();
+        #endif
     }
 }
 
@@ -30,12 +35,18 @@ FeedingState loadState() {
 void initFeeding() {
     servoMekanik.attach(SERVO_PIN);
     servoMekanik.write(SERVO_CLOSED);
-    delay(100); // Give it time to move
+    delay(100); 
     servoMekanik.detach();
 }
 
 void startFeeding(int jumlah) {
-    // Show copyright splash at the start of every feeding
+    // Check IR Sensor before feeding
+    if (digitalRead(IR_SENSOR_PIN) == HIGH) { // Assuming HIGH = Empty
+        Serial.println(F("Feeding failed: Food level too low!"));
+        showRTCError(); // Using this for general hardware errors for now, or custom alert
+        return;
+    }
+
     showCopyright();
     delay(500);
 

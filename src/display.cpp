@@ -5,14 +5,14 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 unsigned long previousMillis = 0;
 int displayMode = 0;
 
-// ── Idle animation state ─────────────────────────────────────────
+// --- Idle animation state ---
 static bool     idleActive = false;
 static uint8_t  idleStep = 0;
 static uint8_t  idleAnimIdx = 0;
 static unsigned long idleLastFrame = 0;
 static unsigned long idleFrameDelay = 80;
 
-// ── Custom character bitmaps ─────────────────────────────────────
+// --- Custom character bitmaps ---
 static uint8_t B_EMPTY[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 static uint8_t B_L1[8]      = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1F};
 static uint8_t B_L2[8]      = {0x00,0x00,0x00,0x00,0x00,0x1F,0x1F,0x1F};
@@ -45,20 +45,12 @@ static uint8_t B_ARROW_R[8]= {0x04,0x06,0x1F,0x1F,0x1F,0x06,0x04,0x00};
 static uint8_t B_ARROW_L[8]= {0x04,0x0C,0x1F,0x1F,0x1F,0x0C,0x04,0x00};
 static uint8_t B_DIAMOND[8]= {0x00,0x04,0x0A,0x11,0x11,0x0A,0x04,0x00};
 
-// ── PRNG ─────────────────────────────────────────────────────────
 static unsigned long prngState = 1;
-
 static int fastRandom(int max) {
     prngState = prngState * 1103515245UL + 12345UL;
     return (int)((prngState / 65536UL) & 0x7FFFUL) % max;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  IDLE ANIMATION — bottom row only (row 1)
-//  Top row (row 0) always shows clock/schedule, never touched
-// ═══════════════════════════════════════════════════════════════════
-
-// Forward declarations
 static void iScanBar();
 static void iBlockFill();
 static void iEqualizer();
@@ -94,7 +86,7 @@ void startIdleAnimation() {
     idleStep = 0;
     idleAnimIdx = fastRandom(24);
     idleLastFrame = 0;
-    idleFrameDelay = 60 + fastRandom(80);
+    idleFrameDelay = 80 + fastRandom(100); // Slower base
     clearIdleZone();
 }
 
@@ -139,15 +131,14 @@ void updateIdleAnimation() {
     }
 
     idleStep++;
-    if (idleStep > 20 + fastRandom(15)) {
+    if (idleStep > 25 + fastRandom(20)) { // Longer duration
         idleStep = 0;
         idleAnimIdx = fastRandom(24);
-        idleFrameDelay = 40 + fastRandom(100);
+        idleFrameDelay = 60 + fastRandom(120); // Slower base
         clearIdleZone();
     }
 }
 
-// ── 0: Scan Bar — right 8 cols ──────────────────────────────────
 static void iScanBar() {
     static int pos = 0, dir = 1, barLen = 3;
     if (idleStep == 0) { pos = 0; dir = 1; barLen = 2 + fastRandom(4); }
@@ -158,14 +149,12 @@ static void iScanBar() {
     if (pos <= 0 || pos + barLen >= 8) { dir = -dir; pos += dir; }
 }
 
-// ── 1: Block Fill — right 8 cols ────────────────────────────────
 static void iBlockFill() {
     lcd.createChar(0, B_FULL); lcd.createChar(1, B_L3);
     lcd.setCursor(8 + fastRandom(8), 1);
     lcd.write(fastRandom(2) == 0 ? byte(0) : byte(1));
 }
 
-// ── 2: Equalizer — right 8 cols ─────────────────────────────────
 static void iEqualizer() {
     lcd.createChar(0, B_EMPTY); lcd.createChar(1, B_L1); lcd.createChar(2, B_L2);
     lcd.createChar(3, B_L3); lcd.createChar(4, B_L4); lcd.createChar(5, B_FULL);
@@ -173,7 +162,6 @@ static void iEqualizer() {
     for (int c = 0; c < 8; c++) lcd.write(byte(fastRandom(6)));
 }
 
-// ── 3: Bounce — right 8 cols ────────────────────────────────────
 static void iBounce() {
     static int pos = 0, vel = 1;
     if (idleStep == 0) { pos = 0; vel = 1; }
@@ -185,7 +173,6 @@ static void iBounce() {
     if (pos <= 0 || pos >= 7) { vel = -vel; pos += vel; }
 }
 
-// ── 4: Spinner — right 8 cols ───────────────────────────────────
 static void iSpinner() {
     static uint8_t frames[4][8] = {
         {0x10,0x10,0x10,0x10,0x10,0x10,0x10,0x1F},
@@ -200,7 +187,6 @@ static void iSpinner() {
     lcd.setCursor(col, 1); lcd.write(byte(0));
 }
 
-// ── 5: Snake — right 8 cols ─────────────────────────────────────
 static void iSnake() {
     static int pos = 0, dir = 1;
     if (idleStep == 0) { pos = 0; dir = 1; }
@@ -213,7 +199,6 @@ static void iSnake() {
     if (pos >= 8 || pos < 0) { dir = -dir; pos += dir; }
 }
 
-// ── 6: Sparkle — right 8 cols ───────────────────────────────────
 static void iSparkle() {
     lcd.createChar(0, B_SPARK1); lcd.createChar(1, B_SPARK2); lcd.createChar(2, B_STAR);
     lcd.setCursor(8 + fastRandom(8), 1);
@@ -221,14 +206,12 @@ static void iSparkle() {
     if (fastRandom(3) == 0) { lcd.setCursor(8 + fastRandom(8), 1); lcd.write(' '); }
 }
 
-// ── 7: Wave — right 8 cols ──────────────────────────────────────
 static void iWave() {
     lcd.createChar(0, B_WAVE1); lcd.createChar(1, B_WAVE2);
     lcd.setCursor(8, 1);
     for (int c = 0; c < 8; c++) lcd.write(byte((c + idleStep) % 2 == 0 ? 0 : 1));
 }
 
-// ── 8: Progress bar — right 8 cols ──────────────────────────────
 static void iProgress() {
     static int pos = 0, dir = 1;
     if (idleStep == 0) { pos = 0; dir = 1; }
@@ -240,7 +223,6 @@ static void iProgress() {
     if (pos >= 7 || pos <= 0) { dir = -dir; pos += dir; }
 }
 
-// ── 9: Glitch — right 8 cols ────────────────────────────────────
 static void iGlitch() {
     lcd.createChar(0, B_CHECKER); lcd.createChar(1, B_DOTS);
     lcd.createChar(2, B_STRIPE); lcd.createChar(3, B_FULL);
@@ -248,14 +230,12 @@ static void iGlitch() {
     for (int c = 0; c < 8; c++) lcd.write(byte(fastRandom(4)));
 }
 
-// ── 10: Zigzag — right 8 cols ───────────────────────────────────
 static void iZigzag() {
     lcd.createChar(0, B_TRI_D); lcd.createChar(1, B_TRI_U);
     lcd.setCursor(8, 1);
     for (int c = 0; c < 8; c++) lcd.write(byte((c + idleStep) % 4 < 2 ? 0 : 1));
 }
 
-// ── 11: Arrow march — right 8 cols ──────────────────────────────
 static void iArrowMarch() {
     static int pos = 0, dir = 1;
     if (idleStep == 0) { pos = 0; dir = 1; }
@@ -268,7 +248,6 @@ static void iArrowMarch() {
     if (pos >= 8 || pos < 0) { dir = -dir; pos += dir; }
 }
 
-// ── 12: Dissolve — right 8 cols ─────────────────────────────────
 static void iDissolve() {
     static bool filled = false;
     if (idleStep == 0) filled = false;
@@ -285,7 +264,6 @@ static void iDissolve() {
     }
 }
 
-// ── 13: Firework — right 8 cols ─────────────────────────────────
 static void iFirework() {
     static int phase = 0;
     static int cx = 11;
@@ -311,7 +289,6 @@ static void iFirework() {
     if (phase > 5) phase = 0;
 }
 
-// ── 14: Heartbeat — right 8 cols ────────────────────────────────
 static void iHeartbeat() {
     static int beat = 0;
     if (idleStep == 0) beat = 0;
@@ -323,7 +300,6 @@ static void iHeartbeat() {
     beat++;
 }
 
-// ── 15: Maze — right 8 cols ─────────────────────────────────────
 static void iMaze() {
     static int s = 0;
     if (idleStep == 0) s = 0;
@@ -337,7 +313,6 @@ static void iMaze() {
     if (s > 4) s = 0;
 }
 
-// ── 16: Orbit — right 8 cols ────────────────────────────────────
 static void iOrbit() {
     static int cx = 11, angle = 0;
     if (idleStep == 0) { cx = 8 + fastRandom(6) + 1; angle = 0; }
@@ -353,7 +328,6 @@ static void iOrbit() {
     angle = (angle + 1) % 8;
 }
 
-// ── 17: Slot machine — right 8 cols ─────────────────────────────
 static void iSlot() {
     static int col = 10;
     if (idleStep == 0) col = 8 + fastRandom(5) + 1;
@@ -362,7 +336,6 @@ static void iSlot() {
     for (int s = 0; s < 3 && col + s < 16; s++) { lcd.setCursor(col + s, 1); lcd.write(byte(fastRandom(5))); }
 }
 
-// ── 18: Binary counter — right 8 cols ───────────────────────────
 static void iBinary() {
     static int val = 0;
     if (idleStep == 0) val = 0;
@@ -372,7 +345,6 @@ static void iBinary() {
     val = (val + 1) & 0xF;
 }
 
-// ── 19: Countdown — right 8 cols ────────────────────────────────
 static void iCountdown() {
     static int num = 5;
     if (idleStep == 0) num = 5;
@@ -384,7 +356,6 @@ static void iCountdown() {
     if (num < 0) num = 5;
 }
 
-// ── 20: Rain — right 8 cols ─────────────────────────────────────
 static void iRain() {
     static int cols[4];
     static bool inited = false;
@@ -398,7 +369,6 @@ static void iRain() {
     }
 }
 
-// ── 21: Diagonal — right 8 cols ─────────────────────────────────
 static void iDiagonal() {
     static int d = 0;
     if (idleStep == 0) d = 0;
@@ -409,7 +379,6 @@ static void iDiagonal() {
     if (d > 7) d = 0;
 }
 
-// ── 22: Typewriter — right 8 cols ───────────────────────────────
 static void iTypewriter() {
     static int idx = 0;
     static const char* txt = "SetGT";
@@ -420,7 +389,6 @@ static void iTypewriter() {
     }
 }
 
-// ── 23: Box expand — right 8 cols ───────────────────────────────
 static void iBoxExpand() {
     static int phase = 0, dir = 1;
     if (idleStep == 0) { phase = 0; dir = 1; }
@@ -440,162 +408,158 @@ static void iBoxExpand() {
     if (phase >= 3 || phase <= 0) { dir = -dir; phase += dir; }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-//  BLOCKING ANIMATIONS (for copyright splash — full screen)
-// ═══════════════════════════════════════════════════════════════════
-
 static void animScanBar() {
     lcd.createChar(0, B_FULL); lcd.createChar(1, B_EMPTY);
     int row = fastRandom(2), barLen = 4 + fastRandom(5), startCol = fastRandom(16 - barLen);
     lcd.setCursor(0, row);
     for (int i = 0; i < 16; i++) lcd.write((i >= startCol && i < startCol + barLen) ? byte(0) : byte(1));
-    delay(120 + fastRandom(180));
+    delay(150 + fastRandom(250));
     lcd.setCursor(0, row); for (int i = 0; i < 16; i++) lcd.write(' ');
 }
 
 static void animBlockFill() {
     lcd.createChar(0, B_FULL); lcd.createChar(1, B_L3);
-    for (int i = 0; i < 6 + fastRandom(10); i++) { lcd.setCursor(fastRandom(16), fastRandom(2)); lcd.write(fastRandom(2)==0?byte(0):byte(1)); delay(40+fastRandom(80)); }
+    for (int i = 0; i < 6 + fastRandom(10); i++) { lcd.setCursor(fastRandom(16), fastRandom(2)); lcd.write(fastRandom(2)==0?byte(0):byte(1)); delay(60+fastRandom(120)); }
 }
 
 static void animEqualizer() {
     lcd.createChar(0,B_EMPTY); lcd.createChar(1,B_L1); lcd.createChar(2,B_L2); lcd.createChar(3,B_L3); lcd.createChar(4,B_L4); lcd.createChar(5,B_FULL);
     for (int r=0;r<2;r++) { lcd.setCursor(0,r); for (int c=0;c<16;c++) lcd.write(byte(1+fastRandom(6))); }
-    delay(250+fastRandom(300));
+    delay(300+fastRandom(400));
     for (int r=0;r<2;r++) { lcd.setCursor(0,r); for (int c=0;c<16;c++) lcd.write(byte(fastRandom(3))); }
-    delay(150+fastRandom(200));
+    delay(200+fastRandom(300));
 }
 
 static void animDiagonal() {
     lcd.createChar(0,B_FULL); lcd.createChar(1,B_CHECKER);
-    for (int p=0;p<2+fastRandom(3);p++) { int dir=fastRandom(2); for (int d=-1;d<17;d++) { for (int r=0;r<2;r++) for (int c=0;c<16;c++) if((dir?(r*2+c):(c-r))==d){lcd.setCursor(c,r);lcd.write(byte(fastRandom(2)));} delay(30); } }
+    for (int p=0;p<2+fastRandom(3);p++) { int dir=fastRandom(2); for (int d=-1;d<17;d++) { for (int r=0;r<2;r++) for (int c=0;c<16;c++) if((dir?(r*2+c):(c-r))==d){lcd.setCursor(c,r);lcd.write(byte(fastRandom(2)));} delay(40); } }
 }
 
 static void animTypewriter(const char* text) {
     int len=strlen(text), row=fastRandom(2), sc=fastRandom(16-min(len,16));
-    for (int i=0;i<min(len,16-sc);i++) { lcd.setCursor(sc+i,row); lcd.print(text[i]); delay(80+fastRandom(120)); }
-    delay(300);
-    for (int i=sc;i<sc+min(len,16-sc);i++) { lcd.setCursor(i,row); lcd.print(' '); delay(40); }
+    for (int i=0;i<min(len,16-sc);i++) { lcd.setCursor(sc+i,row); lcd.print(text[i]); delay(100+fastRandom(150)); }
+    delay(400);
+    for (int i=sc;i<sc+min(len,16-sc);i++) { lcd.setCursor(i,row); lcd.print(' '); delay(60); }
 }
 
 static void animRain() {
     lcd.createChar(0,B_L1); int col[8]; for(int i=0;i<8;i++) col[i]=fastRandom(16);
-    for(int step=0;step<8;step++){for(int i=0;i<8;i++){lcd.setCursor(col[i],(step+i)%2);lcd.write(byte(0));}delay(100+fastRandom(100));for(int i=0;i<8;i++){lcd.setCursor(col[i],(step+i)%2);lcd.write(' ');}}
+    for(int step=0;step<8;step++){for(int i=0;i<8;i++){lcd.setCursor(col[i],(step+i)%2);lcd.write(byte(0));}delay(120+fastRandom(150));for(int i=0;i<8;i++){lcd.setCursor(col[i],(step+i)%2);lcd.write(' ');}}
 }
 
 static void animBounce() {
     lcd.createChar(0,B_CIRCLE); int pos=fastRandom(14)+1,vel=(fastRandom(2)==0)?1:-1;
-    for(int step=0;step<20;step++){int row=(step/3)%2;lcd.setCursor(pos,row);lcd.write(byte(0));delay(80);lcd.setCursor(pos,row);lcd.write(' ');pos+=vel;if(pos<=0||pos>=15){vel=-vel;pos+=vel;}}
+    for(int step=0;step<20;step++){int row=(step/3)%2;lcd.setCursor(pos,row);lcd.write(byte(0));delay(100);lcd.setCursor(pos,row);lcd.write(' ');pos+=vel;if(pos<=0||pos>=15){vel=-vel;pos+=vel;}}
 }
 
 static void animSpinner() {
     uint8_t frames[4][8]={{0x10,0x10,0x10,0x10,0x10,0x10,0x10,0x1F},{0x00,0x00,0x00,0x1F,0x1F,0x00,0x00,0x00},{0x1F,0x10,0x10,0x10,0x10,0x10,0x10,0x10},{0x00,0x00,0x00,0x1F,0x1F,0x00,0x00,0x00}};
     int row=fastRandom(2),col=fastRandom(14)+1;
-    for(int i=0;i<12;i++){uint8_t tmp[8];memcpy(tmp,frames[i%4],8);lcd.createChar(0,tmp);lcd.setCursor(col,row);lcd.write(byte(0));delay(100+fastRandom(80));}
+    for(int i=0;i<12;i++){uint8_t tmp[8];memcpy(tmp,frames[i%4],8);lcd.createChar(0,tmp);lcd.setCursor(col,row);lcd.write(byte(0));delay(120+fastRandom(100));}
     lcd.setCursor(col,row);lcd.write(' ');
 }
 
 static void animBoxExpand() {
     lcd.createChar(0,B_FULL);lcd.createChar(1,B_HBAR1);lcd.createChar(2,B_HBAR2);lcd.createChar(3,B_VBAR1);lcd.createChar(4,B_VBAR2);
-    for(int ph=0;ph<3;ph++){lcd.clear();if(ph==0){lcd.setCursor(7,0);lcd.write(byte(0));lcd.setCursor(7,1);lcd.write(byte(0));}else if(ph==1){for(int c=5;c<=10;c++){lcd.setCursor(c,0);lcd.write(byte(1));}for(int c=5;c<=10;c++){lcd.setCursor(c,1);lcd.write(byte(2));}lcd.setCursor(5,0);lcd.write(byte(3));lcd.setCursor(10,0);lcd.write(byte(3));lcd.setCursor(5,1);lcd.write(byte(4));lcd.setCursor(10,1);lcd.write(byte(4));}else{for(int c=3;c<=12;c++)for(int r=0;r<2;r++){lcd.setCursor(c,r);lcd.write(byte(0));}}delay(200+fastRandom(200));}
-    for(int ph=2;ph>=0;ph--){lcd.clear();if(ph==0){lcd.setCursor(7,0);lcd.write(byte(0));lcd.setCursor(7,1);lcd.write(byte(0));}else if(ph==1){for(int c=5;c<=10;c++){lcd.setCursor(c,0);lcd.write(byte(1));}for(int c=5;c<=10;c++){lcd.setCursor(c,1);lcd.write(byte(2));}lcd.setCursor(5,0);lcd.write(byte(3));lcd.setCursor(10,0);lcd.write(byte(3));lcd.setCursor(5,1);lcd.write(byte(4));lcd.setCursor(10,1);lcd.write(byte(4));}else{for(int c=3;c<=12;c++)for(int r=0;r<2;r++){lcd.setCursor(c,r);lcd.write(byte(0));}}delay(200+fastRandom(200));}
+    for(int ph=0;ph<3;ph++){lcd.clear();if(ph==0){lcd.setCursor(7,0);lcd.write(byte(0));lcd.setCursor(7,1);lcd.write(byte(0));}else if(ph==1){for(int c=5;c<=10;c++){lcd.setCursor(c,0);lcd.write(byte(1));}for(int c=5;c<=10;c++){lcd.setCursor(c,1);lcd.write(byte(2));}lcd.setCursor(5,0);lcd.write(byte(3));lcd.setCursor(10,0);lcd.write(byte(3));lcd.setCursor(5,1);lcd.write(byte(4));lcd.setCursor(10,1);lcd.write(byte(4));}else{for(int c=3;c<=12;c++)for(int r=0;r<2;r++){lcd.setCursor(c,r);lcd.write(byte(0));}}delay(250+fastRandom(250));}
+    for(int ph=2;ph>=0;ph--){lcd.clear();if(ph==0){lcd.setCursor(7,0);lcd.write(byte(0));lcd.setCursor(7,1);lcd.write(byte(0));}else if(ph==1){for(int c=5;c<=10;c++){lcd.setCursor(c,0);lcd.write(byte(1));}for(int c=5;c<=10;c++){lcd.setCursor(c,1);lcd.write(byte(2));}lcd.setCursor(5,0);lcd.write(byte(3));lcd.setCursor(10,0);lcd.write(byte(3));lcd.setCursor(5,1);lcd.write(byte(4));lcd.setCursor(10,1);lcd.write(byte(4));}else{for(int c=3;c<=12;c++)for(int r=0;r<2;r++){lcd.setCursor(c,r);lcd.write(byte(0));}}delay(250+fastRandom(250));}
     lcd.clear();
 }
 
 static void animSnake() {
     lcd.createChar(0,B_SNAKE1);lcd.createChar(1,B_SNAKE2);lcd.createChar(2,B_SNAKE3);lcd.createChar(3,B_SNAKE4);
     int row=fastRandom(2);
-    for(int c=0;c<16;c++){lcd.setCursor(c,row);lcd.write(byte(0));delay(60);lcd.setCursor(c,row);lcd.write(' ');}
-    for(int c=15;c>=0;c--){lcd.setCursor(c,row);lcd.write(byte(2));delay(60);lcd.setCursor(c,row);lcd.write(' ');}
+    for(int c=0;c<16;c++){lcd.setCursor(c,row);lcd.write(byte(0));delay(80);lcd.setCursor(c,row);lcd.write(' ');}
+    for(int c=15;c>=0;c--){lcd.setCursor(c,row);lcd.write(byte(2));delay(80);lcd.setCursor(c,row);lcd.write(' ');}
 }
 
 static void animSparkle() {
     lcd.createChar(0,B_SPARK1);lcd.createChar(1,B_SPARK2);lcd.createChar(2,B_STAR);
-    for(int i=0;i<8+fastRandom(8);i++){int c=fastRandom(16),r=fastRandom(2);lcd.createChar(i%3,(i%3==0)?B_SPARK1:((i%3==1)?B_SPARK2:B_STAR));lcd.setCursor(c,r);lcd.write(byte(i%3));delay(50+fastRandom(100));lcd.setCursor(c,r);lcd.write(' ');}
+    for(int i=0;i<8+fastRandom(8);i++){int c=fastRandom(16),r=fastRandom(2);lcd.createChar(i%3,(i%3==0)?B_SPARK1:((i%3==1)?B_SPARK2:B_STAR));lcd.setCursor(c,r);lcd.write(byte(i%3));delay(70+fastRandom(120));lcd.setCursor(c,r);lcd.write(' ');}
 }
 
 static void animWave() {
     lcd.createChar(0,B_WAVE1);lcd.createChar(1,B_WAVE2);
-    for(int ph=0;ph<4;ph++){for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte((c+ph+r)%2==0?0:1));}delay(150+fastRandom(150));}
+    for(int ph=0;ph<4;ph++){for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte((c+ph+r)%2==0?0:1));}delay(200+fastRandom(200));}
 }
 
 static void animHeartbeat() {
     lcd.createChar(0,B_HEART); int col=fastRandom(14)+1;
-    for(int b=0;b<3;b++){lcd.setCursor(col,0);lcd.write(byte(0));lcd.setCursor(col,1);lcd.write(' ');delay(200);lcd.setCursor(col,1);lcd.write(byte(0));delay(200);lcd.setCursor(col,0);lcd.write(' ');lcd.setCursor(col,1);lcd.write(' ');delay(150);}
+    for(int b=0;b<3;b++){lcd.setCursor(col,0);lcd.write(byte(0));lcd.setCursor(col,1);lcd.write(' ');delay(250);lcd.setCursor(col,1);lcd.write(byte(0));delay(250);lcd.setCursor(col,0);lcd.write(' ');lcd.setCursor(col,1);lcd.write(' ');delay(200);}
 }
 
 static void animArrowMarch() {
     lcd.createChar(0,B_ARROW_R);lcd.createChar(1,B_ARROW_L); int row=fastRandom(2);
-    for(int c=0;c<16;c++){lcd.setCursor(c,row);lcd.write(byte(0));delay(50);lcd.setCursor(c,row);lcd.write(' ');}
-    for(int c=15;c>=0;c--){lcd.setCursor(c,row);lcd.write(byte(1));delay(50);lcd.setCursor(c,row);lcd.write(' ');}
+    for(int c=0;c<16;c++){lcd.setCursor(c,row);lcd.write(byte(0));delay(70);lcd.setCursor(c,row);lcd.write(' ');}
+    for(int c=15;c>=0;c--){lcd.setCursor(c,row);lcd.write(byte(1));delay(70);lcd.setCursor(c,row);lcd.write(' ');}
 }
 
 static void animDissolve() {
     lcd.createChar(0,B_FULL);lcd.createChar(1,B_CHECKER);
-    for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte(0));}delay(200);
-    for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte(1));}delay(200);
+    for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte(0));}delay(250);
+    for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte(1));}delay(250);
     int order[32];for(int i=0;i<32;i++)order[i]=i;for(int i=31;i>0;i--){int j=fastRandom(i+1);int tmp=order[i];order[i]=order[j];order[j]=tmp;}
-    for(int i=0;i<32;i++){lcd.setCursor(order[i]%16,order[i]/16);lcd.write(' ');delay(30+fastRandom(40));}
+    for(int i=0;i<32;i++){lcd.setCursor(order[i]%16,order[i]/16);lcd.write(' ');delay(40+fastRandom(60));}
 }
 
 static void animFirework() {
     lcd.createChar(0,B_SPARK1);lcd.createChar(1,B_SPARK2);lcd.createChar(2,B_STAR);
     int cx=fastRandom(12)+2;
-    for(int r=1;r>=0;r--){lcd.setCursor(cx,r);lcd.write(byte(2));delay(100);lcd.setCursor(cx,r);lcd.write(' ');}
+    for(int r=1;r>=0;r--){lcd.setCursor(cx,r);lcd.write(byte(2));delay(120);lcd.setCursor(cx,r);lcd.write(' ');}
     int bx[6]={cx-2,cx-1,cx,cx+1,cx+2,cx},by[6]={0,1,0,1,0,1};
-    for(int f=0;f<3;f++){for(int i=0;i<6;i++)if(bx[i]>=0&&bx[i]<16){lcd.createChar(i%3,(f%2==0)?B_SPARK1:B_SPARK2);lcd.setCursor(bx[i],by[i]);lcd.write(byte(i%3));}delay(120);}
+    for(int f=0;f<3;f++){for(int i=0;i<6;i++)if(bx[i]>=0&&bx[i]<16){lcd.createChar(i%3,(f%2==0)?B_SPARK1:B_SPARK2);lcd.setCursor(bx[i],by[i]);lcd.write(byte(i%3));}delay(150);}
     for(int i=0;i<6;i++)if(bx[i]>=0&&bx[i]<16){lcd.setCursor(bx[i],by[i]);lcd.write(' ');}
 }
 
 static void animSlotMachine() {
     lcd.createChar(0,B_DIAMOND);lcd.createChar(1,B_HEART);lcd.createChar(2,B_STAR);lcd.createChar(3,B_CIRCLE);lcd.createChar(4,B_CROSS);
     int row=fastRandom(2),col=fastRandom(13)+1;
-    for(int sp=0;sp<12;sp++){for(int s=0;s<3;s++){lcd.setCursor(col+s,row);lcd.write(byte(fastRandom(5)));}delay(60+fastRandom(60));}
-    int fin=fastRandom(5);for(int s=0;s<3;s++){lcd.setCursor(col+s,row);lcd.write(byte(fin));}delay(300);
+    for(int sp=0;sp<12;sp++){for(int s=0;s<3;s++){lcd.setCursor(col+s,row);lcd.write(byte(fastRandom(5)));}delay(80+fastRandom(100));}
+    int fin=fastRandom(5);for(int s=0;s<3;s++){lcd.setCursor(col+s,row);lcd.write(byte(fin));}delay(400);
     for(int s=0;s<3;s++){lcd.setCursor(col+s,row);lcd.write(' ');}
 }
 
 static void animBinaryCounter() {
     lcd.createChar(0,B_FULL);lcd.createChar(1,B_EMPTY); int row=fastRandom(2);
-    for(int v=0;v<16;v++){lcd.setCursor(0,row);for(int b=0;b<16;b++)lcd.write((v&(1<<((15-b)%4)))?byte(0):byte(1));delay(80+fastRandom(80));}
+    for(int v=0;v<16;v++){lcd.setCursor(0,row);for(int b=0;b<16;b++)lcd.write((v&(1<<((15-b)%4)))?byte(0):byte(1));delay(100+fastRandom(120));}
     lcd.setCursor(0,row);for(int i=0;i<16;i++)lcd.write(' ');
 }
 
 static void animZigzag() {
     lcd.createChar(0,B_TRI_D);lcd.createChar(1,B_TRI_U);
-    for(int o=0;o<4;o++){for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write((c+o+r)%4<2?byte(0):byte(1));}delay(120+fastRandom(120));}
+    for(int o=0;o<4;o++){for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write((c+o+r)%4<2?byte(0):byte(1));}delay(150+fastRandom(200));}
 }
 
 static void animProgress() {
     lcd.createChar(0,B_L1);lcd.createChar(1,B_L2);lcd.createChar(2,B_L3);lcd.createChar(3,B_L4);lcd.createChar(4,B_FULL);
     int row=fastRandom(2);
-    for(int c=0;c<16;c++){for(int lv=0;lv<5;lv++){lcd.setCursor(c,row);lcd.write(byte(lv));delay(20);}}delay(200);
-    for(int c=15;c>=0;c--){lcd.setCursor(c,row);lcd.write(' ');delay(30);}
+    for(int c=0;c<16;c++){for(int lv=0;lv<5;lv++){lcd.setCursor(c,row);lcd.write(byte(lv));delay(30);}}delay(300);
+    for(int c=15;c>=0;c--){lcd.setCursor(c,row);lcd.write(' ');delay(40);}
 }
 
 static void animMaze() {
     lcd.createChar(0,B_VBAR1);lcd.createChar(1,B_HBAR1);
-    for(int c=2;c<16;c+=3){int r=fastRandom(2),h=1+fastRandom(2);for(int i=0;i<h&&(r+i)<2;i++){lcd.setCursor(c,r+i);lcd.write(byte(0));delay(60);}}
-    for(int r=0;r<2;r++){for(int c=0;c<16;c+=4){int w=2+fastRandom(3);for(int i=0;i<w&&(c+i)<16;i++){lcd.setCursor(c+i,r);lcd.write(byte(1));delay(40);}}}delay(300);lcd.clear();
+    for(int c=2;c<16;c+=3){int r=fastRandom(2),h=1+fastRandom(2);for(int i=0;i<h&&(r+i)<2;i++){lcd.setCursor(c,r+i);lcd.write(byte(0));delay(80);}}
+    for(int r=0;r<2;r++){for(int c=0;c<16;c+=4){int w=2+fastRandom(3);for(int i=0;i<w&&(c+i)<16;i++){lcd.setCursor(c+i,r);lcd.write(byte(1));delay(60);}}}delay(400);lcd.clear();
 }
 
 static void animOrbit() {
     lcd.createChar(0,B_CIRCLE);lcd.createChar(1,B_RING);
     int cx=fastRandom(12)+2,cy=fastRandom(2);lcd.setCursor(cx,cy);lcd.write(byte(1));
     int o[8][2]={{cx-1,cy},{cx-1,cy-1},{cx,cy-1},{cx+1,cy-1},{cx+1,cy},{cx+1,cy+1},{cx,cy+1},{cx-1,cy+1}};
-    for(int l=0;l<2;l++)for(int i=0;i<8;i++){int oc=o[i][0],or_=o[i][1];if(oc>=0&&oc<16&&or_>=0&&or_<2){lcd.setCursor(oc,or_);lcd.write(byte(0));}delay(80);if(oc>=0&&oc<16&&or_>=0&&or_<2){lcd.setCursor(oc,or_);lcd.write(' ');}}
+    for(int l=0;l<2;l++)for(int i=0;i<8;i++){int oc=o[i][0],or_=o[i][1];if(oc>=0&&oc<16&&or_>=0&&or_<2){lcd.setCursor(oc,or_);lcd.write(byte(0));}delay(100);if(oc>=0&&oc<16&&or_>=0&&or_<2){lcd.setCursor(oc,or_);lcd.write(' ');}}
     lcd.setCursor(cx,cy);lcd.write(' ');
 }
 
 static void animGlitch() {
     lcd.createChar(0,B_CHECKER);lcd.createChar(1,B_DOTS);lcd.createChar(2,B_STRIPE);lcd.createChar(3,B_FULL);
-    for(int f=0;f<6;f++){for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte(fastRandom(4)));}delay(50+fastRandom(80));}lcd.clear();
+    for(int f=0;f<6;f++){for(int r=0;r<2;r++){lcd.setCursor(0,r);for(int c=0;c<16;c++)lcd.write(byte(fastRandom(4)));}delay(70+fastRandom(120));}lcd.clear();
 }
 
 static void animCountdown() {
     lcd.createChar(0,B_FULL);lcd.createChar(1,B_L4);lcd.createChar(2,B_L3);lcd.createChar(3,B_L2);lcd.createChar(4,B_L1);
     int row=fastRandom(2);
-    for(int n=5;n>=0;n--){lcd.setCursor(0,row);for(int c=0;c<16;c++)lcd.write(byte(c<n*3&&n>0?(n>4?0:(5-n)):0));delay(200);}
+    for(int n=5;n>=0;n--){lcd.setCursor(0,row);for(int c=0;c<16;c++)lcd.write(byte(c<n*3&&n>0?(n>4?0:(5-n)):0));delay(250);}
     lcd.setCursor(0,row);for(int c=0;c<16;c++)lcd.write(' ');
 }
 
@@ -613,16 +577,20 @@ static void playRandomAnimation() {
     }
 }
 
-// ── Public functions ────────────────────────────────────────────
 void showCopyright() {
     lcd.clear(); lcd.setCursor(4, 0); lcd.print("Made By"); lcd.setCursor(5, 1); lcd.print("SetGT");
 }
 
 void playCopyrightAnimation() {
-    lcd.noBacklight(); delay(100);
+    lcd.noBacklight(); 
+    delay(200); 
     int rounds = 3 + fastRandom(3);
     for (int i = 0; i < rounds; i++) playRandomAnimation();
-    lcd.backlight(); lcd.clear(); showCopyright(); delay(1200); lcd.clear();
+    lcd.backlight(); 
+    lcd.clear(); 
+    showCopyright(); 
+    delay(1500); 
+    lcd.clear();
 }
 
 void showRTCError() {
@@ -630,7 +598,10 @@ void showRTCError() {
     Serial.println("RTC Error! Check Hardware (display message)");
 }
 
-void initDisplay() { lcd.init(); lcd.backlight(); }
+void initDisplay() { 
+    lcd.init(); 
+    lcd.backlight(); 
+}
 
 void updateDisplay(const TimeData& time) {
     unsigned long currentMillis = millis();
@@ -641,7 +612,6 @@ void updateDisplay(const TimeData& time) {
         if (displayMode > NUM_SESSIONS) displayMode = 0;
     }
 
-    // Row 0: rotating content (date / schedule) — NEVER touched by idle
     if (displayMode != lastMode) {
         lcd.setCursor(0, 0);
         char tempBuffer[20], line1Buffer[17];
@@ -656,7 +626,6 @@ void updateDisplay(const TimeData& time) {
         lastMode = displayMode;
     }
 
-    // Row 1, left half (cols 0–7): time — always visible, never touched by idle
     if (time.second != lastSecond) {
         lcd.setCursor(0, 1);
         char timeStr[9];

@@ -1,10 +1,11 @@
 #include <Arduino.h>
-#include <avr/wdt.h>
 #include "config.h"
 #include "rtc_manager.h"
 #include "display.h"
 #include "feeding.h"
 #include "state_debug.h"
+#include "alerts.h"
+#include "web_portal.h"
 
 bool buttonState = false;
 bool lastButtonState = false;
@@ -21,18 +22,22 @@ static void markActivity() {
 }
 
 void setup() {
-    Serial.begin(9600);
+    Serial.begin(115200);
+
+    // Hardware Init
+    pinMode(BUZZER_1_PIN, OUTPUT);
+    pinMode(BUZZER_2_PIN, OUTPUT);
+    pinMode(IR_SENSOR_PIN, INPUT);
+    digitalWrite(BUZZER_1_PIN, LOW);
+    digitalWrite(BUZZER_2_PIN, LOW);
 
     initRTC();
     getCurrentTime();
     initDisplay();
-
     playCopyrightAnimation();
     initFeeding();
 
     pinMode(BUTTON_PIN, INPUT_PULLUP);
-    wdt_enable(WDTO_2S);
-
     lastActivityTime = millis();
 
     if (isRTCValid()) {
@@ -45,6 +50,10 @@ void setup() {
             markFeedingComplete(now, missedSession);
         }
     }
+
+    #ifdef ARDUINO_ARCH_ESP32
+    initWebPortal();
+    #endif
 }
 
 void handleManualButton() {
@@ -56,8 +65,9 @@ void handleManualButton() {
     if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
         if (buttonState == LOW) {
             if (!buttonPressedFlag) {
-                Serial.println(F("Button pressed - Kasih pakan manual"));
+                Serial.println(F("Button pressed - Manual feed"));
                 markActivity();
+                triggerAlert(1, 100);
                 startFeeding(JUMLAH_PAKAN);
                 buttonPressedFlag = true;
             }
@@ -69,15 +79,20 @@ void handleManualButton() {
 }
 
 void loop() {
-    wdt_reset();
-    static bool rtcErrorDisplayed = false;
+    handleBuzzer();
 
+    #ifdef ARDUINO_ARCH_ESP32
+    handleWebRequests();
+    #endif
+
+    static bool rtcErrorDisplayed = false;
     if (!isRTCValid()) {
         if (!rtcErrorDisplayed) {
-            Serial.println(F("RTC Error: Invalid or missing time data"));
+            Serial.println(F("RTC Error!"));
             showRTCError();
             rtcErrorDisplayed = true;
         }
+        triggerAlert(2, 500);
         handleManualButton();
         updateFeeding();
         return;
@@ -87,6 +102,14 @@ void loop() {
 
     TimeData currentTime = getCurrentTime();
     handleManualButton();
+
+    if (digitalRead(IR_SENSOR_PIN) == HIGH) {
+        static unsigned long lastLowFoodAlert = 0;
+        if (millis() - lastLowFoodAlert > 30000) {
+            triggerAlert(2, 200);
+            lastLowFoodAlert = millis();
+        }
+    }
 
     if (Serial.available() > 0) {
         char cmd = Serial.read();
@@ -105,9 +128,10 @@ void loop() {
                 currentTime.minute == SCHEDULE[s].minute &&
                 !hasFedToday(currentTime, s)) {
 
-                Serial.print(F("Automatic feeding triggered for session "));
+                Serial.print(F("Auto feeding triggered: "));
                 Serial.println(s);
                 markActivity();
+                triggerAlert(1, 100);
                 startFeeding(JUMLAH_PAKAN);
                 markFeedingComplete(currentTime, s);
                 break;
