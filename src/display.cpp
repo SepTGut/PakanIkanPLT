@@ -358,14 +358,29 @@ static void iCountdown() {
 
 static void iRain() {
     static int cols[4];
+    static int rows[4];
     static bool inited = false;
-    if (!inited) { for (int i = 0; i < 4; i++) cols[i] = 8 + fastRandom(8); inited = true; }
+    if (!inited) {
+        for (int i = 0; i < 4; i++) {
+            cols[i] = 8 + fastRandom(8);
+            rows[i] = fastRandom(2);
+        }
+        inited = true;
+    }
     lcd.createChar(0, B_L1);
     for (int i = 0; i < 4; i++) {
-        lcd.setCursor(cols[i], 1); lcd.write(byte(0));
-        int prevC = (cols[i] - 7) % 8 + 8;
-        lcd.setCursor(prevC, 1); lcd.write(' ');
-        cols[i] = (cols[i] - 7) % 8 + 8;
+        // Clear previous position
+        lcd.setCursor(cols[i], rows[i]);
+        lcd.write(' ');
+        // Move raindrop down (wrap around)
+        rows[i]++;
+        if (rows[i] > 1) {
+            rows[i] = 0;
+            cols[i] = 8 + fastRandom(8);
+        }
+        // Draw at new position
+        lcd.setCursor(cols[i], rows[i]);
+        lcd.write(byte(0));
     }
 }
 
