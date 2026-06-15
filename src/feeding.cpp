@@ -7,10 +7,8 @@ Servo servoMekanik;
 int feedCyclesRemaining = 0;
 unsigned long lastServoMillis = 0;
 
-FeedingState state;
+static FeedingState state;
 
-// Forward declaration for buzzer alerts
-void playAlert(int buzzerNum, int durationMs);
 
 void saveState() {
     FeedingState existing;
