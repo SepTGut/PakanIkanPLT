@@ -1,22 +1,30 @@
+/**
+ * @file state_debug.cpp
+ * @brief System state debug output implementation
+ *
+ * Prints a formatted snapshot of the system state to the serial port.
+ * Useful for debugging without a connected LCD.
+ */
+
 #include "state_debug.h"
 #include <Arduino.h>
 
 void printSystemState() {
     Serial.println(F("=== System State ==="));
 
-    // 1. Current RTC time (cached)
+    // 1. Current RTC time (cached, refreshed once per second)
     TimeData now = getCurrentTime();
     Serial.print(F("RTC Time: "));
     Serial.print(now.hour);
-    Serial.print(':' );
+    Serial.print(':');
     Serial.print(now.minute);
-    Serial.print(':' );
+    Serial.print(':');
     Serial.print(now.second);
     Serial.print(F(", Date: "));
     Serial.print(now.day);
-    Serial.print('/') ;
+    Serial.print('/');
     Serial.print(now.month);
-    Serial.print('/') ;
+    Serial.print('/');
     Serial.println(now.year);
 
     // 2. Feeding schedule array
@@ -46,7 +54,7 @@ void printSystemState() {
         Serial.println(last.session);
     }
 
-    // 4. Watchdog status (hard‑coded, 2‑second timeout)
-    Serial.println(F("Watchdog: enabled (2 s timeout)"));
+    // 4. System info
+    Serial.println(F("Watchdog: enabled (2 s timeout)"));
     Serial.println(F("===================="));
 }

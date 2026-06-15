@@ -1,18 +1,55 @@
+/**
+ * @file display.cpp
+ * @brief LCD display module implementation
+ *
+ * 16x2 I2C LCD (address 0x27) driver with:
+ *   - Rotating time/schedule display (row 0)
+ *   - Live clock with padded clearing (row 1)
+ *   - 24 idle animation effects (bottom-right 8 chars of row 1)
+ *   - Boot splash with random animation + "Made By SetGT" copyright
+ *   - Error/status message display
+ *
+ * Idle animations use custom LCD characters (8 slots) and a simple
+ * LCG PRNG for randomness. Animations run non-blocking via millis().
+ */
+
 #include "display.h"
 #include "config.h"
 
+// --- LCD instance (I2C address 0x27, 16 columns, 2 rows) ---
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-unsigned long previousMillis = 0;
-int displayMode = 0;
+
+// --- Display rotation state ---
+unsigned long previousMillis = 0;  ///< Timestamp of last display mode change
+int displayMode = 0;               ///< Current display mode (0 = date, 1..N = schedule)
 
 // --- Idle animation state ---
-static bool     idleActive = false;
-static uint8_t  idleStep = 0;
-static uint8_t  idleAnimIdx = 0;
-static unsigned long idleLastFrame = 0;
-static unsigned long idleFrameDelay = 80;
+static bool     idleActive = false;     ///< true while idle animation is running
+static uint8_t  idleStep = 0;           ///< Current frame step within the animation
+static uint8_t  idleAnimIdx = 0;        ///< Index of the current animation (0–23)
+static unsigned long idleLastFrame = 0; ///< millis() of last frame update
+static unsigned long idleFrameDelay = 80; ///< Delay between frames (ms), randomized per animation
 
-// --- Custom character bitmaps ---
+// --- Custom character bitmaps (8x5 pixel patterns for LCD CGRAM) ---
+// B_EMPTY  : Blank character (all pixels off)
+// B_L1–L4  : Horizontal bar levels (for equalizer animation)
+// B_FULL   : Fully filled block
+// B_CHECKER: Checkerboard pattern
+// B_DOTS   : Dotted pattern
+// B_STRIPE : Vertical stripes
+// B_TRI_D/U: Down/Up triangles
+// B_CIRCLE : Circle outline
+// B_RING   : Ring (hollow circle)
+// B_CROSS  : X cross
+// B_HBAR1/2: Horizontal bars (top/bottom)
+// B_VBAR1/2: Vertical bars (left/right)
+// B_SNAKE1-4: Snake trail segments
+// B_SPARK1/2: Sparkle shapes
+// B_WAVE1/2: Wave shapes
+// B_STAR   : Star shape
+// B_HEART  : Heart shape
+// B_ARROW_R/L: Right/Left arrows
+// B_DIAMOND: Diamond shape
 static uint8_t B_EMPTY[8]   = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 static uint8_t B_L1[8]      = {0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x1F};
 static uint8_t B_L2[8]      = {0x00,0x00,0x00,0x00,0x00,0x1F,0x1F,0x1F};
@@ -45,6 +82,9 @@ static uint8_t B_ARROW_R[8]= {0x04,0x06,0x1F,0x1F,0x1F,0x06,0x04,0x00};
 static uint8_t B_ARROW_L[8]= {0x04,0x0C,0x1F,0x1F,0x1F,0x0C,0x04,0x00};
 static uint8_t B_DIAMOND[8]= {0x00,0x04,0x0A,0x11,0x11,0x0A,0x04,0x00};
 
+// --- Simple LCG PRNG for idle animations ---
+// Not cryptographically secure — just for visual variety.
+// Seeded from micros() in playRandomAnimation() for different sequences each boot.
 static unsigned long prngState = 1;
 static int fastRandom(int max) {
     prngState = prngState * 1103515245UL + 12345UL;
@@ -76,17 +116,23 @@ static void iOrbit();
 static void iGlitch();
 static void iCountdown();
 
+/**
+ * @brief Clear the idle animation zone (bottom-right 8 chars of row 1).
+ *        Called before each animation frame and when stopping.
+ */
 static void clearIdleZone() {
     lcd.setCursor(8, 1);
     for (int i = 0; i < 8; i++) lcd.write(' ');
 }
 
+// --- Idle animation control ---
+
 void startIdleAnimation() {
     idleActive = true;
     idleStep = 0;
-    idleAnimIdx = fastRandom(24);
+    idleAnimIdx = fastRandom(24);          // Pick a random animation
     idleLastFrame = 0;
-    idleFrameDelay = 80 + fastRandom(100); // Slower base
+    idleFrameDelay = 80 + fastRandom(100); // Randomize speed per animation
     clearIdleZone();
 }
 
@@ -97,6 +143,11 @@ void stopIdleAnimation() {
 
 bool isIdleAnimating() { return idleActive; }
 
+/**
+ * @brief Update the idle animation. Call every loop() when animating.
+ *        Dispatches to one of 24 animation functions based on idleAnimIdx.
+ *        Each animation runs for 25–45 steps, then switches to a new one.
+ */
 void updateIdleAnimation() {
     if (!idleActive) return;
     unsigned long now = millis();
@@ -578,6 +629,11 @@ static void animCountdown() {
     lcd.setCursor(0,row);for(int c=0;c<16;c++)lcd.write(' ');
 }
 
+/**
+ * @brief Play one random full-screen animation during the boot splash.
+ *        Seeds the PRNG from micros() for variety, then picks one of
+ *        24 animation effects.
+ */
 static void playRandomAnimation() {
     prngState = (unsigned long)micros() + 1UL;
     switch (fastRandom(24)) {
@@ -592,10 +648,18 @@ static void playRandomAnimation() {
     }
 }
 
+/**
+ * @brief Show the static "Made By SetGT" copyright screen.
+ */
 void showCopyright() {
     lcd.clear(); lcd.setCursor(4, 0); lcd.print("Made By"); lcd.setCursor(5, 1); lcd.print("SetGT");
 }
 
+/**
+ * @brief Play the boot animation sequence.
+ *        Plays 3–5 random full-screen animations, then shows the
+ *        copyright splash for 1.5 seconds. Backlight stays on throughout.
+ */
 void playCopyrightAnimation() {
     int rounds = 3 + fastRandom(3);
     for (int i = 0; i < rounds; i++) playRandomAnimation();
@@ -605,11 +669,19 @@ void playCopyrightAnimation() {
     lcd.clear();
 }
 
+/**
+ * @brief Show an RTC hardware error on the LCD and Serial.
+ */
 void showRTCError() {
     lcd.clear(); lcd.setCursor(0, 0); lcd.print("RTC Error!"); lcd.setCursor(0, 1); lcd.print("Check Hardware");
     Serial.println("RTC Error! Check Hardware (display message)");
 }
 
+/**
+ * @brief Show a custom two-line error message on the LCD.
+ * @param line1  First line text
+ * @param line2  Second line text (nullptr = single line only)
+ */
 void showError(const char* line1, const char* line2) {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -620,11 +692,21 @@ void showError(const char* line1, const char* line2) {
     }
 }
 
-void initDisplay() { 
-    lcd.init(); 
-    lcd.backlight(); 
+/**
+ * @brief Initialize the LCD. Turns on backlight.
+ *        Must be called once in setup() before any other display functions.
+ */
+void initDisplay() {
+    lcd.init();
+    lcd.backlight();
 }
 
+/**
+ * @brief Update the display. Call every loop() iteration.
+ *        Row 0: rotates between date and schedule entries every DISPLAY_INTERVAL ms.
+ *        Row 1: live clock (HH:MM:SS), padded to 16 chars to clear ghost characters.
+ * @param time  Current time data from the RTC
+ */
 void updateDisplay(const TimeData& time) {
     unsigned long currentMillis = millis();
     static int lastSecond = -1, lastMode = -1;

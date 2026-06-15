@@ -1,59 +1,113 @@
+/**
+ * @file config.h
+ * @brief Central configuration file for PakanIkanPLT (Automatic Fish Feeder)
+ *
+ * This file contains all hardware pin mappings, feature toggles, timing
+ * constants, and feeding schedule definitions. Modify this file to adapt
+ * the project to different boards or change feeding behavior.
+ *
+ * Board selection is automatic via Arduino preprocessor defines:
+ *   - ARDUINO_ARCH_ESP32: ESP32 WROOM / C3 pin mapping
+ *   - Otherwise:          Arduino Uno pin mapping
+ */
+
 #ifndef CONFIG_H
 #define CONFIG_H
 
 #include <Arduino.h>
 
 // ==========================================================================================
-// HARDWARE CONFIGURATION
+// HARDWARE CONFIGURATION — Pin Mapping
 // ==========================================================================================
+// Pins are selected based on board architecture. ESP32 uses GPIO numbers,
+// Arduino Uno uses digital pin numbers.
 
-// --- Board Specific Pin Mapping ---
 #ifdef ARDUINO_ARCH_ESP32
-    // ESP32 WROOM / C3 Pins
-    #define BUTTON_PIN 0        
-    #define SERVO_PIN 18           
-    #define BUZZER_1_PIN 19     // Status Buzzer
-    #define BUZZER_2_PIN 21     // Alert Buzzer
-    #define IR_SENSOR_PIN 22    // Food Level Sensor
+    // --- ESP32 WROOM / C3 Pins ---
+    // GPIO 0  : Built-in BOOT button (active LOW, internal pull-up)
+    // GPIO 18 : Servo PWM output (LEDC channel capable)
+    // GPIO 19 : Status buzzer (short beeps for feeding confirmation)
+    // GPIO 21 : Alert buzzer  (longer beeps for errors / low food)
+    // GPIO 22 : IR sensor input (HIGH = food empty, LOW = food present)
+    #define BUTTON_PIN    0
+    #define SERVO_PIN     18
+    #define BUZZER_1_PIN  19     // Status Buzzer
+    #define BUZZER_2_PIN  21     // Alert Buzzer
+    #define IR_SENSOR_PIN 22     // Food Level Sensor
 #else
-    // Arduino Uno Pins
-    #define BUTTON_PIN 2
-    #define SERVO_PIN 4
-    #define BUZZER_1_PIN 5
-    #define BUZZER_2_PIN 6
+    // --- Arduino Uno Pins ---
+    // Pin 2  : Push button (external pull-up or INPUT_PULLUP)
+    // Pin 4  : Servo PWM output (Timer1, compatible with Arduino Servo lib)
+    // Pin 5  : Status buzzer
+    // Pin 6  : Alert buzzer
+    // Pin 3  : IR sensor input
+    #define BUTTON_PIN    2
+    #define SERVO_PIN     4
+    #define BUZZER_1_PIN  5
+    #define BUZZER_2_PIN  6
     #define IR_SENSOR_PIN 3
 #endif
 
-// --- Feature Toggles ---
-#define ENABLE_BUZZERS true   // Set to false to completely disable all buzzers
+// ==========================================================================================
+// FEATURE TOGGLES
+// ==========================================================================================
+// Set ENABLE_BUZZERS to false to completely disable all buzzer output.
+// Useful for silent operation or when buzzers are not connected.
+#define ENABLE_BUZZERS true
 
-// Servo Settings
-#define SERVO_OPEN 150
+// ==========================================================================================
+// SERVO SETTINGS
+// ==========================================================================================
+// Angle values for the servo-driven food dispenser.
+// SERVO_OPEN  : Angle that opens the hopper gate (food falls through)
+// SERVO_CLOSED: Angle that closes the hopper gate (food retained)
+// Adjust these values based on your mechanical linkage.
+#define SERVO_OPEN   150
 #define SERVO_CLOSED 0
 
-// Display Settings
+// ==========================================================================================
+// DISPLAY SETTINGS
+// ==========================================================================================
+// Time (in milliseconds) between display mode rotations.
+// The LCD cycles through: date → schedule 1 → schedule 2 → ... → schedule N
 const long DISPLAY_INTERVAL = 3000;
 
-// Feeding Schedule Structure
+// ==========================================================================================
+// FEEDING SCHEDULE
+// ==========================================================================================
+// Each session defines a label (shown on LCD) and a trigger time (hour:minute).
+// The system checks every minute whether a session has passed and hasn't been
+// fed yet today. Up to NUM_SESSIONS sessions are supported.
+
 struct FeedingSession {
-    const char* label;
-    int hour;
-    int minute;
+    const char* label;  // Human-readable name (e.g. "Pagi", "Siang")
+    int hour;           // Trigger hour   (0–23)
+    int minute;         // Trigger minute (0–59)
 };
 
-// Feeding Schedules
+// Feeding schedule table — edit times here to match your fish's needs.
+// NOTE: Sessions should be in chronological order for correct missed-feed detection.
 const FeedingSession SCHEDULE[] = {
-    {"Pagi", 6, 0},
-    {"Siang", 12, 0},
-    {"Sore", 18, 0},
-    {"Malam", 21, 0},
-    {"Test", 13, 0}
+    {"Pagi",  6,  0},   // 06:00 — Morning feeding
+    {"Siang", 12,  0},   // 12:00 — Afternoon feeding
+    {"Sore",  18,  0},   // 18:00 — Evening feeding
+    {"Malam", 21,  0},   // 21:00 — Night feeding
+    {"Test",  13,  0}    // 13:00 — Test feeding (remove in production)
 };
 
+// Total number of feeding sessions (auto-calculated from the array above).
 const int NUM_SESSIONS = sizeof(SCHEDULE) / sizeof(SCHEDULE[0]);
+
+// Number of servo open/close cycles per feeding.
+// Each cycle dispenses a small amount of food. Total food ≈ JUMLAH_PAKAN × cycle_volume.
 const int JUMLAH_PAKAN = 100;
 
-// Labels
-const char* const DAYS_OF_THE_WEEK[7] = {"Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"};
+// ==========================================================================================
+// DAY-OF-WEEK LABELS
+// ==========================================================================================
+// Indonesian day names used by the RTC module (0 = Sunday).
+const char* const DAYS_OF_THE_WEEK[7] = {
+    "Ahad", "Senin", "Selasa", "Rabu", "Kamis", "Jum'at", "Sabtu"
+};
 
-#endif
+#endif // CONFIG_H

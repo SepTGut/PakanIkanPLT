@@ -1,21 +1,42 @@
+/**
+ * @file feeding.cpp
+ * @brief Feeding control module implementation
+ *
+ * Controls the servo-driven food dispenser. Feeding is non-blocking:
+ * startFeeding() sets the number of cycles, and updateFeeding() advances
+ * the state machine every 100ms.
+ *
+ * EEPROM wear leveling: saveState() only writes when data actually changes.
+ * On first boot (EEPROM = 0xFF), loadState() returns session=255 (None),
+ * which correctly triggers missed-feed detection.
+ */
+
 #include "feeding.h"
 #include "config.h"
 #include "display.h"
 #include <EEPROM.h>
 
+// Servo instance — uses Arduino built-in Servo library (works on both AVR and ESP32)
 Servo servoMekanik;
-int feedCyclesRemaining = 0;
-unsigned long lastServoMillis = 0;
 
+// Feeding state machine variables
+int feedCyclesRemaining = 0;      ///< Number of open/close cycles left
+unsigned long lastServoMillis = 0; ///< Timestamp of last servo action
+
+// Persistent state — stored in EEPROM, loaded on boot
 static FeedingState state;
 
-
+/**
+ * @brief Save the current feeding state to EEPROM.
+ *        Only writes if data changed to reduce EEPROM wear.
+ *        On ESP32, EEPROM.commit() is required to persist.
+ */
 void saveState() {
     FeedingState existing;
     EEPROM.get(0, existing);
-    if (existing.day != state.day ||
-        existing.month != state.month ||
-        existing.year != state.year ||
+    if (existing.day    != state.day ||
+        existing.month  != state.month ||
+        existing.year   != state.year ||
         existing.session != state.session) {
         EEPROM.put(0, state);
         #ifdef ARDUINO_ARCH_ESP32
@@ -24,34 +45,53 @@ void saveState() {
     }
 }
 
+/**
+ * @brief Load the feeding state from EEPROM.
+ *        On first boot, returns {0xFF, 0xFF, 0xFFFF, 0xFF} (session = None).
+ */
 FeedingState loadState() {
     FeedingState loaded;
     EEPROM.get(0, loaded);
     return loaded;
 }
 
+/**
+ * @brief Initialize the servo. Moves to CLOSED position then detaches.
+ *        Detaching prevents servo jitter and saves power.
+ */
 void initFeeding() {
     servoMekanik.attach(SERVO_PIN);
     servoMekanik.write(SERVO_CLOSED);
-    delay(100); 
+    delay(100);
     servoMekanik.detach();
 }
 
+/**
+ * @brief Start a feeding cycle.
+ *        Checks IR sensor first — aborts if food is low.
+ *        Each cycle = one open + one close. Total steps = jumlah * 2.
+ */
 void startFeeding(int jumlah) {
-    // Check IR Sensor before feeding
-    if (digitalRead(IR_SENSOR_PIN) == HIGH) { // Assuming HIGH = Empty
+    // Check IR sensor before feeding — HIGH means empty
+    if (digitalRead(IR_SENSOR_PIN) == HIGH) {
         Serial.println(F("Feeding failed: Food level too low!"));
         showError("Food Low!", "Refill hopper");
         return;
     }
 
+    // Show copyright splash while feeding starts
     showCopyright();
     delay(500);
 
     servoMekanik.attach(SERVO_PIN);
-    feedCyclesRemaining = jumlah * 2;
+    feedCyclesRemaining = jumlah * 2;  // Each cycle = open + close
 }
 
+/**
+ * @brief Advance the feeding state machine.
+ *        Called every loop(). Non-blocking: uses millis() for timing.
+ *        Alternates between OPEN and CLOSED every 100ms.
+ */
 void updateFeeding() {
     if (feedCyclesRemaining <= 0) return;
     if (millis() - lastServoMillis >= 100) {
@@ -68,16 +108,22 @@ void updateFeeding() {
     }
 }
 
+/**
+ * @brief Record a completed feeding in EEPROM and serial log.
+ */
 void markFeedingComplete(TimeData time, int session) {
-    state.day = time.day;
-    state.month = time.month;
-    state.year = time.year;
+    state.day    = time.day;
+    state.month  = time.month;
+    state.year   = time.year;
     state.session = session;
     saveState();
     Serial.print(F("Feeding recorded in EEPROM for session "));
     Serial.println(session);
 }
 
+/**
+ * @brief Quick servo test — open then close. Triggered via serial 't'.
+ */
 void testServo() {
     Serial.println(F("Testing servo..."));
     servoMekanik.attach(SERVO_PIN);
@@ -89,26 +135,39 @@ void testServo() {
     Serial.println(F("Servo test complete"));
 }
 
+/**
+ * @brief Check if a specific session was already fed today.
+ *        Compares day/month/year and session index.
+ */
 bool hasFedToday(TimeData time, int session) {
     FeedingState last = loadState();
-    if (last.day == (uint8_t)time.day &&
-        last.month == (uint8_t)time.month &&
-        last.year == (uint16_t)time.year &&
+    if (last.day    == (uint8_t)time.day &&
+        last.month  == (uint8_t)time.month &&
+        last.year   == (uint16_t)time.year &&
         last.session == (uint8_t)session) {
         return true;
     }
     return false;
 }
 
+/**
+ * @brief Detect missed feedings after power loss.
+ *        Returns the earliest session index whose time has passed
+ *        and hasn't been fed yet. Returns -1 if nothing was missed.
+ *
+ * Three cases:
+ *   1. No feeding ever recorded (session == 255) → first passed session
+ *   2. Last feeding on a different day            → first passed session
+ *   3. Last feeding today                         → first passed session after last.session
+ */
 int checkMissedFeeds(TimeData time) {
     FeedingState last = loadState();
 
-    bool todaySame = (last.day == (uint8_t)time.day &&
-                        last.month == (uint8_t)time.month &&
-                        last.year == (uint16_t)time.year);
+    bool todaySame = (last.day   == (uint8_t)time.day &&
+                      last.month == (uint8_t)time.month &&
+                      last.year  == (uint16_t)time.year);
 
-    // If no feeding has ever been recorded (session == 255 means None),
-    // return the first session that has passed.
+    // Case 1: No feeding ever recorded
     if (last.session == 255) {
         for (int s = 0; s < NUM_SESSIONS; s++) {
             if (time.hour > SCHEDULE[s].hour ||
@@ -119,7 +178,7 @@ int checkMissedFeeds(TimeData time) {
         return -1;
     }
 
-    // If last feeding was on a different day, find first session that has passed
+    // Case 2: Different day — find first session that has passed
     if (!todaySame) {
         for (int s = 0; s < NUM_SESSIONS; s++) {
             if (time.hour > SCHEDULE[s].hour ||
@@ -130,7 +189,7 @@ int checkMissedFeeds(TimeData time) {
         return -1;
     }
 
-    // Same day: find first session after the last fed session that has passed
+    // Case 3: Same day — find first session after the last fed session
     for (int s = last.session + 1; s < NUM_SESSIONS; s++) {
         if (time.hour > SCHEDULE[s].hour ||
             (time.hour == SCHEDULE[s].hour && time.minute >= SCHEDULE[s].minute)) {
