@@ -43,7 +43,7 @@ void startFeeding(int jumlah) {
     // Check IR Sensor before feeding
     if (digitalRead(IR_SENSOR_PIN) == HIGH) { // Assuming HIGH = Empty
         Serial.println(F("Feeding failed: Food level too low!"));
-        showRTCError(); // Using this for general hardware errors for now, or custom alert
+        showError("Food Low!", "Refill hopper");
         return;
     }
 

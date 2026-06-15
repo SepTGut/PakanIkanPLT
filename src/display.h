@@ -8,6 +8,7 @@
 void initDisplay();
 void updateDisplay(const TimeData& time);
 void showRTCError();
+void showError(const char* line1, const char* line2 = nullptr);
 
 // Copyright / splash screen (full-screen, blocking)
 void showCopyright();
