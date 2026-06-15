@@ -1,3 +1,15 @@
+/**
+ * @file web_portal.cpp
+ * @brief WiFi configuration web portal implementation (ESP32 only)
+ *
+ * Creates a captive portal access point ("PakanIkan-Config") with a web form
+ * for configuring WiFi credentials. Uses ESPAsyncWebServer for HTTP handling
+ * and DNSServer for DNS hijacking (captive portal).
+ *
+ * On non-ESP32 platforms, this entire file is compiled as empty (guarded by
+ * #ifdef ARDUINO_ARCH_ESP32).
+ */
+
 #include "web_portal.h"
 #include "config.h"
 #include "feeding.h"
@@ -36,8 +48,8 @@
         });
 
         server.on("/save", HTTP_POST, [](AsyncWebServerRequest *request){
-            String ssid = request.getParam("ssid", true)->value();
-            String pass = request.getParam("pass", true)->value();
+            String ssid = request->getParam("ssid", true)->value();
+            String pass = request->getParam("pass", true)->value();
             Serial.printf("Connecting to %s...\\n", ssid.c_str());
             WiFi.begin(ssid.c_str(), pass.c_str());
             request->send(200, "text/html", "<html><body><h1 >Saved!</h1><p>Rebooting and connecting to WiFi...</p></body></html>");
