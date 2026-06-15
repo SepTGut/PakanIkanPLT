@@ -121,9 +121,10 @@ void loop() {
         }
     }
 
-    static int lastTriggerSecond = -1;
-    if (currentTime.second != lastTriggerSecond) {
-        for (size_t s = 0; s < (size_t)NUM_SESSIONS; s++) {
+    static int lastTriggerMinute = -1;
+    static int lastTriggerDay = -1;
+    if (currentTime.minute != lastTriggerMinute || currentTime.day != lastTriggerDay) {
+        for (int s = 0; s < NUM_SESSIONS; s++) {
             if (currentTime.hour == SCHEDULE[s].hour &&
                 currentTime.minute == SCHEDULE[s].minute &&
                 !hasFedToday(currentTime, s)) {
@@ -137,7 +138,8 @@ void loop() {
                 break;
             }
         }
-        lastTriggerSecond = currentTime.second;
+        lastTriggerMinute = currentTime.minute;
+        lastTriggerDay = currentTime.day;
     }
 
     updateDisplay(currentTime);
