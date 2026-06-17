@@ -97,7 +97,7 @@ static const unsigned long IDLE_TIMEOUT = 10000;  // milliseconds (10 seconds)
 Pin mappings are defined in `include/config.h` and are selected automatically based on the target board:
 
 - **Arduino Uno:** Pins D2–D6, A4–A5
-- **ESP32 WROOM / C3:** GPIO 0, 18, 19, 21, 22
+- **ESP32 WROOM / C3:** GPIO 0, 16, 17, 18, 19, 21 (I2C SDA), 22 (I2C SCL)
 
 Edit the `#define` values to change pin assignments for your hardware.
 

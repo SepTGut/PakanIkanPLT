@@ -39,11 +39,13 @@ An automated fish feeding system built with PlatformIO, targeting Arduino Uno, E
 ### ESP32 WROOM / C3
 | Pin | Function |
 |-----|----------|
-| GPIO 0 | Button (BOOT) |
+| GPIO 0  | Button (BOOT) |
+| GPIO 16 | Buzzer 2 (Alert) |
+| GPIO 17 | IR Sensor |
 | GPIO 18 | Servo PWM |
 | GPIO 19 | Buzzer 1 (Status) |
-| GPIO 21 | Buzzer 2 (Alert) |
-| GPIO 22 | IR Sensor |
+| GPIO 21 | I2C SDA (LCD + RTC) |
+| GPIO 22 | I2C SCL (LCD + RTC) |
 
 ## Software Architecture
 

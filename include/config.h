@@ -27,13 +27,15 @@
     // GPIO 0  : Built-in BOOT button (active LOW, internal pull-up)
     // GPIO 18 : Servo PWM output (LEDC channel capable)
     // GPIO 19 : Status buzzer (short beeps for feeding confirmation)
-    // GPIO 21 : Alert buzzer  (longer beeps for errors / low food)
-    // GPIO 22 : IR sensor input (HIGH = food empty, LOW = food present)
+    // GPIO 16 : Alert buzzer  (longer beeps for errors / low food)
+    // GPIO 17 : IR sensor input (HIGH = food empty, LOW = food present)
+    // GPIO 21 : I2C SDA (default — LCD + RTC)
+    // GPIO 22 : I2C SCL (default — LCD + RTC)
     #define BUTTON_PIN    0
     #define SERVO_PIN     18
     #define BUZZER_1_PIN  19     // Status Buzzer
-    #define BUZZER_2_PIN  21     // Alert Buzzer
-    #define IR_SENSOR_PIN 22     // Food Level Sensor
+    #define BUZZER_2_PIN  16     // Alert Buzzer
+    #define IR_SENSOR_PIN 17     // Food Level Sensor
 #else
     // --- Arduino Uno Pins ---
     // Pin 2  : Push button (external pull-up or INPUT_PULLUP)
