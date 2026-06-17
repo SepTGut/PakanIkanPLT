@@ -35,6 +35,7 @@
     AsyncWebServer server(80);
     DNSServer dnsServer;
     bool isConfigMode = false;
+    bool shouldRestart = false;   ///< Set true after saving WiFi config; main loop calls ESP.restart()
     const char* apSSID = "PakanIkan-Config";
     const char* apPass = "12345678";
 
@@ -171,8 +172,7 @@ document.getElementById('wifiForm').addEventListener('submit',function(e){
 )rawliteral";
             html += FPSTR(PAGE_FOOT);
             request->send(200, "text/html", html);
-            delay(2000);
-            ESP.restart();
+            shouldRestart = true;  // Deferred restart — handled in handleWebRequests()
         });
 
         // ── Captive portal redirect: all unknown paths → root ──
@@ -186,6 +186,10 @@ document.getElementById('wifiForm').addEventListener('submit',function(e){
 
     void handleWebRequests() {
         dnsServer.processNextRequest();
+        if (shouldRestart) {
+            delay(1000);  // Give time for HTTP response to be sent
+            ESP.restart();
+        }
     }
 
 #endif // ARDUINO_ARCH_ESP32

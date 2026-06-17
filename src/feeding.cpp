@@ -56,10 +56,15 @@ FeedingState loadState() {
 }
 
 /**
- * @brief Initialize the servo. Moves to CLOSED position then detaches.
- *        Detaching prevents servo jitter and saves power.
+ * @brief Initialize the feeding subsystem.
+ *        On ESP32, EEPROM.begin() must be called before any EEPROM access.
+ *        Moves servo to CLOSED position then detaches to prevent jitter.
  */
 void initFeeding() {
+    #ifdef ARDUINO_ARCH_ESP32
+    EEPROM.begin(512);  // Allocate 512 bytes for EEPROM emulation
+    #endif
+
     servoMekanik.attach(SERVO_PIN);
     servoMekanik.write(SERVO_CLOSED);
     delay(100);
