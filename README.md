@@ -11,7 +11,7 @@ An Arduino/ESP32-based automatic fish feeder that ensures your fish are fed on t
 - **Smart Display** — 16x2 I2C LCD showing time, date, and upcoming schedules
 - **Idle Animations** — 24 random LCD animations during periods of inactivity
 - **Buzzer Alerts** — Two buzzers: status (feeding confirmation) and alert (errors)
-- **Web Portal** — WiFi configuration via captive portal (ESP32 only)
+- **Web Portal** — Modern dark-themed WiFi configuration via captive portal (ESP32 only)
 - **Serial Debug** — Full diagnostic interface via USB serial (115200 baud)
 - **Cross-Platform** — Runs on Arduino Uno, ESP32 WROOM, and ESP32-C3
 
@@ -48,8 +48,6 @@ An Arduino/ESP32-based automatic fish feeder that ensures your fish are fed on t
 | GPIO 19 | Buzzer 1 (Status) |
 | GPIO 21 | Buzzer 2 (Alert) |
 | GPIO 22 | IR Sensor |
-| GPIO 21 | I2C SDA (default, LCD & RTC) |
-| GPIO 22 | I2C SCL (default, LCD & RTC) |
 
 > **Note:** Edit `include/config.h` to change pin assignments.
 
@@ -67,7 +65,10 @@ PakanIkanPLT/
 │   ├── alerts.cpp        # Non-blocking buzzer state machine
 │   ├── state_debug.cpp   # Serial debug output
 │   └── web_portal.cpp    # WiFi captive portal (ESP32 only)
+├── docs/
+│   └── superpowers/plans # Implementation plans
 ├── platformio.ini        # PlatformIO project configuration
+├── CONFIG_GUIDE.md       # Quick configuration reference
 └── README.md             # This file
 ```
 
@@ -106,8 +107,11 @@ const FeedingSession SCHEDULE[] = {
     {"Siang", 12,  0},   // 12:00 — Afternoon
     {"Sore",  18,  0},   // 18:00 — Evening
     {"Malam", 21,  0},   // 21:00 — Night
+    {"Test",  13,  0}    // 13:00 — Test feeding (remove in production)
 };
 ```
+
+> **Note:** Sessions should be in chronological order for correct missed-feed detection.
 
 ### Servo Calibration
 
@@ -134,9 +138,25 @@ Disable buzzers entirely:
 #define ENABLE_BUZZERS false
 ```
 
+### Display Rotation Speed
+
+Change how fast the LCD cycles through schedule entries:
+
+```cpp
+const long DISPLAY_INTERVAL = 3000;  // milliseconds
+```
+
+### Idle Animation Timeout
+
+Change the delay before idle animations start:
+
+```cpp
+static const unsigned long IDLE_TIMEOUT = 10000;  // milliseconds
+```
+
 ## 💻 Serial Commands (115200 baud)
 
-Connect via USB serial to monitor and control the device:
+Connect via USB serial to monitor and control the device. The device only outputs data when explicitly requested — no unsolicited messages.
 
 | Command | Description |
 |---------|-------------|
@@ -166,6 +186,34 @@ Watchdog: enabled (2 s timeout)
 ====================
 ```
 
+```
+> p
+=== Device Info ===
+Device: PakanIkanPLT (Automatic Fish Feeder)
+Board:  ESP32
+RTC:    OK
+Feeds:  5 sessions/day
+Food:   OK
+===================
+```
+
+```
+> t
+Testing servo...
+Servo test complete
+```
+
+## 🌐 Web Portal (ESP32 only)
+
+On first boot (or when WiFi is not configured), the ESP32 creates a WiFi access point:
+
+- **SSID:** `PakanIkan-Config`
+- **Password:** `12345678`
+
+Connect to this network and open any web browser. The captive portal will redirect you to the configuration page. Enter your WiFi credentials and the device will restart and connect to your network.
+
+**Design:** Dark aquatic theme with ocean blue / teal accent colors. Responsive layout, centered card, no external dependencies.
+
 ## 🏗️ Architecture
 
 ### Feeding State Machine
@@ -191,6 +239,24 @@ The feeding state is only written to EEPROM when the data actually changes, redu
 ### Idle Animations
 
 After 10 seconds of no user activity, random animations play on the bottom-right 8 characters of the LCD's bottom row. The clock/schedule on the top row is never disturbed. Twenty-four animation effects are available, selected randomly with varied speeds.
+
+### Buzzer Alert System
+
+Non-blocking buzzer control with configurable duration. The buzzer pattern is ON for the first half of the duration, OFF for the second half, then deactivates automatically. Two buzzers are supported:
+- **Buzzer 1 (Status):** Short beeps for feeding confirmation
+- **Buzzer 2 (Alert):** Longer beeps for errors and low food
+
+### RTC Time Caching
+
+Time is cached in RAM and refreshed from the DS1307 once per second to minimize I2C traffic. Validity is checked on every refresh (year must be 2000–2100).
+
+## 📊 Build Status
+
+| Environment | RAM Usage | Flash Usage |
+|-------------|-----------|-------------|
+| Arduino Uno | 62.3% (1.3KB) | 76.3% (24.6KB) |
+| ESP32 WROOM | 11.8% (38.7KB) | 45.9% (602KB) |
+| ESP32-C3 | 9.2% (30.1KB) | 43.4% (568KB) |
 
 ## 📝 License
 

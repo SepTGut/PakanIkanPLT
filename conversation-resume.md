@@ -1,51 +1,92 @@
-# Conversation Resume: Pakan Ikan Otomatis PlatformIO Migration
+# Conversation Resume: PakanIkanPLT
 
 ## 📌 Project Overview
-This document serves as a comprehensive hand-off for the "Pakan Ikan Otomatis" (Automatic Fish Feeder) project. The project has been successfully migrated from a monolithic Arduino `.ino` file to a professional, modular PlatformIO structure.
+This document serves as a comprehensive hand-off for the "PakanIkanPLT" (Automatic Fish Feeder) project. The project has been migrated from a monolithic Arduino `.ino` file to a professional, modular PlatformIO structure targeting Arduino Uno, ESP32 WROOM, and ESP32-C3.
 
-**Target Folder:** `PlatformIO_Project`
+**Branch:** `Beta`
 
 ## 🛠️ Technical State
+
 ### Hardware Configuration
-- **MCU:** Arduino Uno
-- **RTC:** DS1307 (Updated from DS3231). *Note: Temperature sensing was removed as DS1307 does not support it.*
-- **Display:** 16x2 LCD with I2C adapter (Address: `0x27`).
-- **Actuator:** Servo Motor on **Digital Pin 4**.
-- **Input:** Manual trigger button on **Digital Pin 5** (`INPUT_PULLUP`).
+- **MCU:** Arduino Uno / ESP32 WROOM / ESP32-C3 (selectable via PlatformIO environment)
+- **RTC:** DS1307 (I2C address 0x68), battery-backed
+- **Display:** 16x2 LCD with I2C adapter (Address: `0x27`)
+- **Actuator:** Servo Motor (PWM-driven hopper gate)
+- **Input:** Manual trigger button (active LOW, internal pull-up)
+- **Sensors:** IR sensor for food level detection (HIGH = empty)
+- **Audio:** 2× buzzers (status + alert)
 
 ### Software Architecture
-The code was refactored from `main.cpp` into the following modules:
-- `include/config.h`: Centralized constants for pins, feeding schedules, and labels.
-- `src/rtc_manager.cpp/h`: Time/Date acquisition using `RTClib`.
-- `src/display.cpp/h`: LCD logic including the 3-second rotation system.
-- `src/feeding.cpp/h`: Non-blocking servo pulse logic (state machine using `millis()`).
-- `src/main.cpp`: System coordinator and main loop.
+The code is fully modular with Doxygen-style comments:
+
+| Module | File(s) | Purpose |
+|--------|---------|---------|
+| Config | `include/config.h` | Pin mapping, schedules, feature toggles, constants |
+| RTC | `src/rtc_manager.cpp/h` | DS1307 driver, 1s cached refresh, validity checking |
+| Feeding | `src/feeding.cpp/h` | Servo control, EEPROM state, missed-feed detection |
+| Display | `src/display.cpp/h` | LCD driver, 24 idle animations, boot splash |
+| Alerts | `src/alerts.cpp/h` | Non-blocking buzzer state machine |
+| Debug | `src/state_debug.cpp/h` | Serial debug output |
+| Web | `src/web_portal.cpp/h` | WiFi captive portal (ESP32 only) |
+| Main | `src/main.cpp` | Setup, main loop, serial command handler |
+
+### Serial Commands (115200 baud)
+| Command | Description |
+|---------|-------------|
+| `s` | Detailed system state |
+| `p` | Brief device info |
+| `t` | Test servo |
+| `b` | Test buzzer |
+| `f` | Manual feed |
+| `r` | Read IR sensor |
+| `e` | Show EEPROM state |
+| `h` | Help menu |
 
 ### Key Improvements Made
-1. **Memory Optimization:** Replaced heavy `String` concatenation in the main loop with `snprintf` and `char` buffers to prevent heap fragmentation.
-2. **Non-Blocking Logic:** The feeding mechanism now uses a state machine instead of `delay()`, ensuring the LCD continues to rotate and the button remains responsive during feeding.
-3. **Standardization:** Adopted consistent naming conventions (`camelCase` for variables/functions, `SCREAMING_SNAKE_CASE` for constants).
-4. **Dependency Management:** Fixed `platformio.ini` by using the generic `LiquidCrystal_I2C` library to resolve registry package errors.
+1. **Memory Optimization:** Replaced `String` concatenation with `snprintf` and `char` buffers
+2. **Non-Blocking Logic:** Feeding uses state machine instead of `delay()`
+3. **EEPROM Wear Leveling:** Only writes when data changes
+4. **Missed Feed Recovery:** Detects and compensates for missed feedings after power loss
+5. **Cross-Platform:** Single codebase targets Arduino Uno, ESP32 WROOM, ESP32-C3
+6. **Buzzer Duration:** Configurable duration parameter (was hardcoded 400ms)
+7. **Error Display:** Generic `showError()` function instead of misusing `showRTCError()`
+8. **LCD Backlight:** Stays on during boot animation
+9. **Time Tracking:** Minute+day granularity for feeding triggers (was second-based)
+10. **Code Comments:** Comprehensive Doxygen-style comments on all files
+11. **Web Portal:** Modern dark aquatic theme with AJAX form submission
+12. **Documentation:** Full README.md rewrite, updated CONFIG_GUIDE.md, updated .gitignore
 
 ## ⚙️ Calibration & Settings
+
 ### Servo Calibration
-If the feeder does not open or close correctly, adjust these values in `src/feeding.cpp`:
-- **Open Position:** `150` degrees.
-- **Closed Position:** `0` degrees.
+Adjust angles in `include/config.h`:
+- **Open Position:** `150` degrees
+- **Closed Position:** `0` degrees
+
+Test via serial command `t` without modifying code.
 
 ### Feeding Schedules
-Currently configured in `include/config.h`:
-- **Morning:** 06:00
-- **Afternoon:** 12:00
-- **Evening:** 18:00
-- **Amount:** 15 pulses per feeding.
+Configured in `include/config.h`:
+- **Pagi (Morning):** 06:00
+- **Siang (Afternoon):** 12:00
+- **Sore (Evening):** 18:00
+- **Malam (Night):** 21:00
+- **Test:** 13:00 (remove in production)
+- **Amount:** 100 servo cycles per feeding
+
+### RTC Initialization
+To set the RTC to compile-time date/time:
+1. Uncomment `rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));` in `src/rtc_manager.cpp`
+2. Build and upload
+3. Re-comment the line and upload again
 
 ## ⚠️ Known Issues & Notes
-- **IntelliSense:** The user reported "red squiggles" in VS Code. This is a known PlatformIO IDE behavior. The solution is to run `PlatformIO: Rebuild IntelliSense Index` from the Command Palette. The code is verified as correct regardless of the squiggles.
-- **RTC Setting:** To calibrate the date/time, uncomment `rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));` in `src/rtc_manager.cpp`, upload, then comment it back out and upload again.
+- **IntelliSense:** VS Code may show "red squiggles." Run `PlatformIO: Rebuild IntelliSense Index` from the Command Palette. The code compiles correctly regardless.
+- **ESP32 Web Portal:** On first boot, connect to WiFi AP "PakanIkan-Config" (password: 12345678) and open any browser for the captive portal.
 
 ## 🚀 Next Steps for Resuming
-1. Open the `PlatformIO_Project` folder in VS Code.
-2. Build the project ($\checkmark$ icon) to verify all libraries are installed.
-3. Upload to the Arduino Uno.
-4. If the servo movement needs adjustment, modify the angles in `src/feeding.cpp`.
+1. Open the project folder in VS Code with PlatformIO
+2. Select target environment: `env:uno`, `env:esp32_wroom`, or `env:esp32_c3`
+3. Build: `pio run --target upload`
+4. Open serial monitor: `pio device monitor -b 115200`
+5. Type `h` for help, `s` for system state, `t` to test servo
