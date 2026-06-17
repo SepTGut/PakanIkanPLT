@@ -40,18 +40,29 @@ An Arduino/ESP32-based automatic fish feeder that ensures your fish are fed on t
 | A4  | I2C SDA (LCD, RTC) |
 | A5  | I2C SCL (LCD, RTC) |
 
-### ESP32 WROOM / C3
+### ESP32 WROOM
 | Pin | Function |
 |-----|----------|
 | GPIO 0  | Button (BOOT) |
-| GPIO 16 | Buzzer 2 (Alert) |
-| GPIO 17 | IR Sensor |
+| GPIO 16 | Buzzer 1 (Status) |
+| GPIO 17 | Buzzer 2 (Alert) |
 | GPIO 18 | Servo PWM |
-| GPIO 19 | Buzzer 1 (Status) |
+| GPIO 19 | IR Sensor |
 | GPIO 21 | I2C SDA (LCD + RTC) |
 | GPIO 22 | I2C SCL (LCD + RTC) |
 
-> **Note:** GPIO 21 and GPIO 22 are the ESP32's default I2C pins and are used by both the LCD display and the DS1307 RTC. You can reassign I2C pins by changing `I2C_SDA_PIN` and `I2C_SCL_PIN` in `include/config.h`. On Arduino Uno, I2C uses fixed hardware pins (A4=SDA, A5=SCL).
+### ESP32-C3
+| Pin | Function |
+|-----|----------|
+| GPIO 0  | Button (BOOT) |
+| GPIO 1  | Buzzer 1 (Status) |
+| GPIO 2  | Buzzer 2 (Alert) |
+| GPIO 3  | IR Sensor |
+| GPIO 4  | I2C SDA (LCD + RTC) |
+| GPIO 5  | I2C SCL (LCD + RTC) |
+| GPIO 18 | Servo PWM |
+
+> **Note:** The ESP32-C3 has fewer GPIOs than the WROOM (only GPIO 0–10 and 18–21). Pins are auto-selected at compile time. You can reassign I2C pins by changing `I2C_SDA_PIN` and `I2C_SCL_PIN` in `include/config.h`. On Arduino Uno, I2C uses fixed hardware pins (A4=SDA, A5=SCL).
 
 ## 📂 Project Structure
 

@@ -23,23 +23,41 @@
 // Arduino Uno uses digital pin numbers.
 
 #ifdef ARDUINO_ARCH_ESP32
-    // --- ESP32 WROOM / C3 Pins ---
+    // --- ESP32 WROOM Pins ---
     // GPIO 0  : Built-in BOOT button (active LOW, internal pull-up)
-    // GPIO 18 : Servo PWM output (LEDC channel capable)
-    // GPIO 16 : Status buzzer (short beeps for feeding confirmation)
-    // GPIO 17 : Alert buzzer  (longer beeps for errors / low food)
-    // GPIO 19 : IR sensor input (HIGH = food empty, LOW = food present)
+    // GPIO 16 : Status buzzer
+    // GPIO 17 : Alert buzzer
+    // GPIO 18 : Servo PWM
+    // GPIO 19 : IR sensor
+    // GPIO 21 : I2C SDA (LCD + RTC)
+    // GPIO 22 : I2C SCL (LCD + RTC)
     //
-    // I2C pins (configurable — change these if you need different pins):
-    // GPIO 21 : I2C SDA (default — LCD + RTC)
-    // GPIO 22 : I2C SCL (default — LCD + RTC)
-    #define BUTTON_PIN    0
-    #define SERVO_PIN     18
-    #define BUZZER_1_PIN  16     // Status Buzzer
-    #define BUZZER_2_PIN  17     // Alert Buzzer
-    #define IR_SENSOR_PIN 19     // Food Level Sensor
-    #define I2C_SDA_PIN   21     // I2C Data (change if using non-default pins)
-    #define I2C_SCL_PIN   22     // I2C Clock (change if using non-default pins)
+    // ESP32-C3 is also ARDUINO_ARCH_ESP32 but has fewer GPIOs.
+    // Use ARDUINO_ESP32C3_DEV to detect C3 specifically.
+    //
+    // ESP32-C3 available GPIOs: 0-10, 18-21
+    // Safe for all ESP32 variants: 0, 1, 2, 3, 4, 5, 18, 19
+    // GPIO 16,17,21,22 exist on WROOM but NOT on C3
+
+    #ifdef ARDUINO_ESP32C3_DEV
+        // --- ESP32-C3 Safe Pin Mapping ---
+        #define BUTTON_PIN    0
+        #define SERVO_PIN     18
+        #define BUZZER_1_PIN  1      // Status Buzzer
+        #define BUZZER_2_PIN  2      // Alert Buzzer
+        #define IR_SENSOR_PIN 3      // Food Level Sensor
+        #define I2C_SDA_PIN   4      // I2C Data (LCD + RTC) — change to 18 for default
+        #define I2C_SCL_PIN   5      // I2C Clock (LCD + RTC) — change to 19 for default
+    #else
+        // --- ESP32 WROOM Pin Mapping ---
+        #define BUTTON_PIN    0
+        #define SERVO_PIN     18
+        #define BUZZER_1_PIN  16     // Status Buzzer
+        #define BUZZER_2_PIN  17     // Alert Buzzer
+        #define IR_SENSOR_PIN 19     // Food Level Sensor
+        #define I2C_SDA_PIN   21     // I2C Data (default — LCD + RTC)
+        #define I2C_SCL_PIN   22     // I2C Clock (default — LCD + RTC)
+    #endif
 #else
     // --- Arduino Uno Pins ---
     // Pin 2  : Push button (external pull-up or INPUT_PULLUP)
