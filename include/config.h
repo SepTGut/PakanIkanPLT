@@ -80,6 +80,10 @@
 // Useful for silent operation or when buzzers are not connected.
 #define ENABLE_BUZZERS true
 
+// Set ENABLE_IR_SENSOR to false to completely disable the IR food level sensor.
+// Useful when the IR sensor is not connected or causing false triggers.
+#define ENABLE_IR_SENSOR true
+
 // ==========================================================================================
 // SERVO SETTINGS
 // ==========================================================================================

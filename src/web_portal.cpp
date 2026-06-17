@@ -291,6 +291,10 @@ function postWifi(ssid,pass,cb){
     <div class="form-row"><label>Enabled</label><input type="checkbox" id="s-buzzer" style="width:20px;height:20px"></div>
   </div>
   <div class="card">
+    <div class="card-title">&#x1F52D; IR Sensor</div>
+    <div class="form-row"><label>Enabled</label><input type="checkbox" id="s-ir" style="width:20px;height:20px"></div>
+  </div>
+  <div class="card">
     <div class="card-title">&#x1F4F6; WiFi Configuration</div>
     <div class="form-row"><label>SSID</label><input type="text" id="s-wifi-ssid" placeholder="WiFi Name"></div>
     <div class="form-row"><label>Password</label><input type="password" id="s-wifi-pass" placeholder="Password"></div>
@@ -348,6 +352,7 @@ function refreshStatus(){
         document.getElementById('s-amount').value=d.settings.feed_amount;
         document.getElementById('s-interval').value=d.settings.display_interval;
         document.getElementById('s-buzzer').checked=d.settings.buzzer_enabled;
+        document.getElementById('s-ir').checked=d.settings.ir_enabled;
         // Settings schedule
         var sSchedHtml='<tr><th>Label</th><th>Hour</th><th>Min</th></tr>';
         for(var i=0;i<d.settings.schedule.length;i++){
@@ -376,6 +381,7 @@ function saveAllSettings(){
     feed_amount:parseInt(document.getElementById('s-amount').value)||100,
     display_interval:parseInt(document.getElementById('s-interval').value)||3000,
     buzzer_enabled:document.getElementById('s-buzzer').checked,
+    ir_enabled:document.getElementById('s-ir').checked,
     schedule:sched
   });
 }
@@ -452,6 +458,7 @@ setInterval(refreshStatus,2000);
         json += "\"feed_amount\":" + String(JUMLAH_PAKAN) + ",";
         json += "\"display_interval\":" + String(DISPLAY_INTERVAL) + ",";
         json += "\"buzzer_enabled\":" + String(ENABLE_BUZZERS ? "true" : "false") + ",";
+        json += "\"ir_enabled\":" + String(ENABLE_IR_SENSOR ? "true" : "false") + ",";
         json += "\"schedule\":[";
         for (int i = 0; i < NUM_SESSIONS; i++) {
             json += "{\"label\":\"" + String(SCHEDULE[i].label) + "\",";

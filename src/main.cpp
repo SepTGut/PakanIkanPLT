@@ -299,7 +299,7 @@ void loop() {
     handleManualButton();
 
     // --- IR sensor: low food alert (rate-limited to once per 30 seconds) ---
-    if (digitalRead(IR_SENSOR_PIN) == HIGH) {
+    if (ENABLE_IR_SENSOR && digitalRead(IR_SENSOR_PIN) == HIGH) {
         static unsigned long lastLowFoodAlert = 0;
         if (millis() - lastLowFoodAlert > 30000) {
             triggerAlert(2, 200);
