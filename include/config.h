@@ -110,6 +110,27 @@ const int NUM_SESSIONS = sizeof(SCHEDULE) / sizeof(SCHEDULE[0]);
 const int JUMLAH_PAKAN = 100;
 
 // ==========================================================================================
+// EEPROM Settings Storage — Persistent configuration saved by web portal
+// ==========================================================================================
+// Address 0–3:   FeedingState (day, month, year, session) — used by feeding.cpp
+// Address 10:    Settings magic byte (0xA5 = settings valid)
+// Address 11:    Buzzer toggle (0 = disabled, 1 = enabled)
+// Address 12–13: Display interval (uint16_t, milliseconds)
+// Address 14:    Servo open angle (uint8_t)
+// Address 15:    Servo closed angle (uint8_t)
+// Address 16:    Feed amount JUMLAH_PAKAN (uint8_t)
+// Address 20–69: Feeding schedule (5 sessions × 10 bytes each: 8-byte label + hour + minute)
+#define EEPROM_SETTINGS_MAGIC   10
+#define EEPROM_BUZZER_TOGGLE    11
+#define EEPROM_DISPLAY_INTERVAL 12
+#define EEPROM_SERVO_OPEN_ANGLE 14
+#define EEPROM_SERVO_CLOSED_ANGLE 15
+#define EEPROM_FEED_AMOUNT      16
+#define EEPROM_SCHEDULE_START   20
+#define EEPROM_SCHEDULE_ENTRY_SIZE 10  // 8 bytes label + 1 byte hour + 1 byte minute
+#define EEPROM_SETTINGS_MAGIC_VAL 0xA5
+
+// ==========================================================================================
 // DAY-OF-WEEK LABELS
 // ==========================================================================================
 // Indonesian day names used by the RTC module (0 = Sunday).

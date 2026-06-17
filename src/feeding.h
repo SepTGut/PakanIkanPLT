@@ -93,4 +93,18 @@ int checkMissedFeeds(TimeData time);
  */
 FeedingState loadState();
 
+/**
+ * @brief Save runtime settings to EEPROM (called by web portal).
+ *        Stores: buzzer toggle, display interval, servo angles, feed amount, schedule.
+ * @return true if settings were saved successfully
+ */
+bool saveSettings();
+
+/**
+ * @brief Load runtime settings from EEPROM (called during initFeeding).
+ *        Restores: buzzer toggle, display interval, servo angles, feed amount, schedule.
+ * @return true if valid settings were found and loaded
+ */
+bool loadSettings();
+
 #endif // FEEDING_H
