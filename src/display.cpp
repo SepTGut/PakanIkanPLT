@@ -697,6 +697,10 @@ void showError(const char* line1, const char* line2) {
  *        Must be called once in setup() before any other display functions.
  */
 void initDisplay() {
+#ifdef ARDUINO_ARCH_ESP32
+    // Use configurable I2C pins (default: GPIO 21=SDA, GPIO 22=SCL)
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+#endif
     lcd.init();
     lcd.backlight();
 }

@@ -51,7 +51,7 @@ An Arduino/ESP32-based automatic fish feeder that ensures your fish are fed on t
 | GPIO 21 | I2C SDA (LCD + RTC) |
 | GPIO 22 | I2C SCL (LCD + RTC) |
 
-> **Note:** GPIO 21 and GPIO 22 are the ESP32's default I2C pins and are used by both the LCD display and the DS1307 RTC. Edit `include/config.h` to change pin assignments.
+> **Note:** GPIO 21 and GPIO 22 are the ESP32's default I2C pins and are used by both the LCD display and the DS1307 RTC. You can reassign I2C pins by changing `I2C_SDA_PIN` and `I2C_SCL_PIN` in `include/config.h`. On Arduino Uno, I2C uses fixed hardware pins (A4=SDA, A5=SCL).
 
 ## 📂 Project Structure
 

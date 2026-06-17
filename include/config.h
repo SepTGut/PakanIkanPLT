@@ -26,16 +26,20 @@
     // --- ESP32 WROOM / C3 Pins ---
     // GPIO 0  : Built-in BOOT button (active LOW, internal pull-up)
     // GPIO 18 : Servo PWM output (LEDC channel capable)
-    // GPIO 19 : Status buzzer (short beeps for feeding confirmation)
-    // GPIO 16 : Alert buzzer  (longer beeps for errors / low food)
-    // GPIO 17 : IR sensor input (HIGH = food empty, LOW = food present)
+    // GPIO 16 : Status buzzer (short beeps for feeding confirmation)
+    // GPIO 17 : Alert buzzer  (longer beeps for errors / low food)
+    // GPIO 19 : IR sensor input (HIGH = food empty, LOW = food present)
+    //
+    // I2C pins (configurable — change these if you need different pins):
     // GPIO 21 : I2C SDA (default — LCD + RTC)
     // GPIO 22 : I2C SCL (default — LCD + RTC)
     #define BUTTON_PIN    0
     #define SERVO_PIN     18
-    #define BUZZER_1_PIN  19     // Status Buzzer
-    #define BUZZER_2_PIN  16     // Alert Buzzer
-    #define IR_SENSOR_PIN 17     // Food Level Sensor
+    #define BUZZER_1_PIN  16     // Status Buzzer
+    #define BUZZER_2_PIN  17     // Alert Buzzer
+    #define IR_SENSOR_PIN 19     // Food Level Sensor
+    #define I2C_SDA_PIN   21     // I2C Data (change if using non-default pins)
+    #define I2C_SCL_PIN   22     // I2C Clock (change if using non-default pins)
 #else
     // --- Arduino Uno Pins ---
     // Pin 2  : Push button (external pull-up or INPUT_PULLUP)
@@ -43,6 +47,7 @@
     // Pin 5  : Status buzzer
     // Pin 6  : Alert buzzer
     // Pin 3  : IR sensor input
+    // I2C uses fixed hardware pins: A4=SDA, A5=SCL (not configurable on AVR)
     #define BUTTON_PIN    2
     #define SERVO_PIN     4
     #define BUZZER_1_PIN  5

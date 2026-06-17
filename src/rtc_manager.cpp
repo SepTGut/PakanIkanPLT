@@ -22,6 +22,10 @@ static TimeData cachedTime;
 static unsigned long lastUpdate = 0;  ///< millis() of last RTC read
 
 void initRTC() {
+#ifdef ARDUINO_ARCH_ESP32
+    // Use configurable I2C pins (default: GPIO 21=SDA, GPIO 22=SCL)
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+#endif
     if (!rtc.begin()) {
         Serial.println("Couldn't find RTC");
         rtcInitialized = false;
