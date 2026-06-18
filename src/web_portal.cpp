@@ -409,7 +409,7 @@ setInterval(refreshStatus,2000);
         json += "\"rtc_valid\":\"" + String(isRTCValid() ? "OK" : "ERROR") + "\",";
 
         // Food level
-        json += "\"food_level\":\"" + String(digitalRead(IR_SENSOR_PIN) == HIGH ? "LOW" : "OK") + "\",";
+        json += "\"food_level\":\"" + String(IR_SENSOR_PIN >= 0 && digitalRead(IR_SENSOR_PIN) == HIGH ? "LOW" : "OK") + "\",";
 
         // EEPROM last feeding
         json += "\"eeprom_last\":{";

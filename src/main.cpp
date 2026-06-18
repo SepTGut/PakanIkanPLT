@@ -87,7 +87,11 @@ static void printDeviceInfo() {
     Serial.print(NUM_SESSIONS);
     Serial.println(F(" sessions/day"));
     Serial.print(F("Food:   "));
-    Serial.println(digitalRead(IR_SENSOR_PIN) == HIGH ? F("LOW") : F("OK"));
+    if (IR_SENSOR_PIN >= 0) {
+        Serial.println(digitalRead(IR_SENSOR_PIN) == HIGH ? F("LOW") : F("OK"));
+    } else {
+        Serial.println(F("DISABLED"));
+    }
     Serial.println(F("==================="));
 }
 
@@ -96,6 +100,10 @@ static void printDeviceInfo() {
  *        Triggered via serial command 'r'.
  */
 static void readIRSensor() {
+    if (IR_SENSOR_PIN < 0) {
+        Serial.println(F("IR Sensor: DISABLED (pin = -1)"));
+        return;
+    }
     int state = digitalRead(IR_SENSOR_PIN);
     Serial.print(F("IR Sensor: "));
     Serial.println(state == HIGH ? F("HIGH (empty)") : F("LOW (food present)"));
@@ -202,12 +210,10 @@ void setup() {
     delay(500);  // Allow USB-JTAG to stabilize after reset
     Serial.println(F("\n\n=== PakanIkanPLT Boot ==="));
 
-    // --- GPIO initialization ---
-    pinMode(BUZZER_1_PIN, OUTPUT);
-    pinMode(BUZZER_2_PIN, OUTPUT);
-    pinMode(IR_SENSOR_PIN, INPUT);
-    digitalWrite(BUZZER_1_PIN, LOW);
-    digitalWrite(BUZZER_2_PIN, LOW);
+    // --- GPIO initialization (skip pins set to -1 = unused) ---
+    if (BUZZER_1_PIN >= 0) { pinMode(BUZZER_1_PIN, OUTPUT); digitalWrite(BUZZER_1_PIN, LOW); }
+    if (BUZZER_2_PIN >= 0) { pinMode(BUZZER_2_PIN, OUTPUT); digitalWrite(BUZZER_2_PIN, LOW); }
+    if (IR_SENSOR_PIN >= 0) pinMode(IR_SENSOR_PIN, INPUT);
     // Heartbeat LED
     #ifdef ARDUINO_ARCH_ESP32
     pinMode(8, OUTPUT);
@@ -221,8 +227,8 @@ void setup() {
     playCopyrightAnimation();  // Boot splash (backlight stays on)
     initFeeding();             // Servo to CLOSED, then detach
 
-    // --- Button ---
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    // --- Button (skip if -1) ---
+    if (BUTTON_PIN >= 0) pinMode(BUTTON_PIN, INPUT_PULLUP);
     lastActivityTime = millis();
 
     // --- Missed feed recovery ---
@@ -253,6 +259,7 @@ void setup() {
  *        Active LOW (INPUT_PULLUP). Triggers a single feed per press.
  */
 void handleManualButton() {
+    if (BUTTON_PIN < 0) return;  // Button disabled
     buttonState = digitalRead(BUTTON_PIN);
     if (buttonState != lastButtonState) {
         lastDebounceTime = millis();
@@ -322,7 +329,7 @@ void loop() {
     handleManualButton();
 
     // --- IR sensor: low food alert (rate-limited to once per 30 seconds) ---
-    if (ENABLE_IR_SENSOR && digitalRead(IR_SENSOR_PIN) == HIGH) {
+    if (ENABLE_IR_SENSOR && IR_SENSOR_PIN >= 0 && digitalRead(IR_SENSOR_PIN) == HIGH) {
         static unsigned long lastLowFoodAlert = 0;
         if (millis() - lastLowFoodAlert > 30000) {
             triggerAlert(2, 200);

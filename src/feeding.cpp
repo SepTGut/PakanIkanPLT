@@ -77,8 +77,8 @@ void initFeeding() {
  *        Each cycle = one open + one close. Total steps = jumlah * 2.
  */
 void startFeeding(int jumlah) {
-    // Check IR sensor before feeding — HIGH means empty
-    if (digitalRead(IR_SENSOR_PIN) == HIGH) {
+    // Check IR sensor before feeding (skip if pin is -1 = unused)
+    if (IR_SENSOR_PIN >= 0 && digitalRead(IR_SENSOR_PIN) == HIGH) {
         Serial.println(F("Feeding failed: Food level too low!"));
         showError("Food Low!", "Refill hopper");
         return;

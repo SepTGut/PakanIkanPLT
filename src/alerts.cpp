@@ -20,6 +20,9 @@ static int           alertBuzzer    = 1;     ///< buzzer number (1 or 2)
 
 void triggerAlert(int buzzer, unsigned long duration) {
     if (!ENABLE_BUZZERS) return;
+    // Skip if the requested buzzer pin is not connected (-1)
+    int pin = (buzzer == 1) ? BUZZER_1_PIN : BUZZER_2_PIN;
+    if (pin < 0) return;
 
     alertBuzzer   = buzzer;
     alertDuration = duration;
@@ -30,18 +33,21 @@ void triggerAlert(int buzzer, unsigned long duration) {
 void handleBuzzer() {
     if (!ENABLE_BUZZERS || !alertActive) return;
 
+    int pin = (alertBuzzer == 1) ? BUZZER_1_PIN : BUZZER_2_PIN;
+    if (pin < 0) { alertActive = false; return; }  // Safety: disable if pin is -1
+
     unsigned long elapsed = millis() - alertStartTime;
 
     if (elapsed < alertDuration) {
         // First half: buzzer ON; second half: buzzer OFF
         if (elapsed < alertDuration / 2) {
-            digitalWrite(alertBuzzer == 1 ? BUZZER_1_PIN : BUZZER_2_PIN, HIGH);
+            digitalWrite(pin, HIGH);
         } else {
-            digitalWrite(alertBuzzer == 1 ? BUZZER_1_PIN : BUZZER_2_PIN, LOW);
+            digitalWrite(pin, LOW);
         }
     } else {
         // Duration expired — ensure buzzer is OFF and deactivate
-        digitalWrite(alertBuzzer == 1 ? BUZZER_1_PIN : BUZZER_2_PIN, LOW);
+        digitalWrite(pin, LOW);
         alertActive = false;
     }
 }
