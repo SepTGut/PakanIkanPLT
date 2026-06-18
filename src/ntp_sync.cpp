@@ -16,12 +16,12 @@
 #include <WiFi.h>
 #include <time.h>
 
-// Indonesian NTP pool servers
+// NTP pool servers (generic pool, works worldwide)
 static const char* NTP_SERVERS[] = {
-    "0.id.pool.ntp.org",
-    "1.id.pool.ntp.org",
-    "2.id.pool.ntp.org",
-    "3.id.pool.ntp.org"
+    "pool.ntp.org",
+    "time.google.com",
+    "time.cloudflare.com",
+    "time.nist.gov"
 };
 
 // Timezone offset in seconds (UTC+7 for WIB)
