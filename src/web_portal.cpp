@@ -536,9 +536,9 @@ setInterval(refreshStatus,2000);
     void initWebPortal() {
         isConfigMode = true;
 
-        // Start AP first (most reliable on C3)
-        WiFi.mode(WIFI_AP);
-        delay(100);  // Allow radio to stabilize on C3
+        // Use AP+STA mode: AP for configuration, STA for home WiFi
+        WiFi.mode(WIFI_AP_STA);
+        delay(200);  // Allow radio to stabilize
 
         bool apStarted = WiFi.softAP(apSSID, apPass);
         Serial.print(F("AP '"));
@@ -631,6 +631,8 @@ setInterval(refreshStatus,2000);
                 }
 
                 Serial.printf("Connecting to %s...\n", ssid.c_str());
+                // Ensure STA mode is enabled for the connection
+                WiFi.mode(WIFI_AP_STA);
                 WiFi.begin(ssid.c_str(), pass.c_str());
 
                 request->send(200, "application/json", "{\"ok\":true,\"message\":\"WiFi saved. Connecting to " + ssid + "...\"}");
