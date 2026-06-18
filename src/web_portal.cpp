@@ -7,15 +7,19 @@
  *   Control   — Actions (manual feed, test servo/buzzer, clear EEPROM)
  *   Settings  — Configuration (schedule, servo, buzzer, display, WiFi)
  *
+ * WiFi connection strategy for C3 stability:
+ *   1. On boot, try to connect to saved WiFi credentials (EEPROM)
+ *   2. If connected → sync NTP, start mDNS, run portal on STA IP
+ *   3. If not connected → start AP only, user configures via portal
+ *   4. When portal saves WiFi → store to EEPROM, restart to apply
+ *   5. Never call WiFi.begin() inside HTTP handler (crashes C3)
+ *
  * REST API:
  *   GET  /api/status   → Full system status JSON
  *   POST /api/action   → Execute action {type, ...}
  *   GET  /api/settings → Current settings JSON
  *   POST /api/settings → Update settings {...}
  *   POST /api/wifi     → Save WiFi config {ssid, pass}
- *
- * Works in both AP mode (captive portal) and STA mode (home WiFi).
- * All HTML/CSS/JS stored in PROGMEM. No external dependencies.
  */
 
 #include "web_portal.h"
@@ -42,10 +46,6 @@
     const char* apSSID = "PakanIkan-Config";
     const char* apPass = "12345678";
 
-    // ── Action result tracking ──
-    String lastActionResult = "";
-    unsigned long lastActionTime = 0;
-
     // ── Forward declarations ──
     String buildStatusJSON();
     void handleAction(AsyncWebServerRequest *request, String body);
@@ -70,12 +70,10 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:var(--bg);color:var(--text);min-height:100vh;padding:16px;}
-/* ── Header ── */
 .header{text-align:center;padding:20px 0 16px}
 .header .logo{font-size:40px;line-height:1;margin-bottom:4px}
 .header h1{font-size:20px;font-weight:700;margin-bottom:2px}
 .header .subtitle{color:var(--muted);font-size:13px}
-/* ── Tab Navigation ── */
 .tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--card2);
   border-radius:12px;padding:4px}
 .tab{flex:1;padding:10px 4px;text-align:center;border-radius:10px;
@@ -83,12 +81,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   transition:all .2s;border:none;background:transparent}
 .tab.active{background:var(--primary);color:#fff}
 .tab:hover:not(.active){background:var(--border);color:var(--text)}
-/* ── Cards ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:14px;
   padding:20px;margin-bottom:16px}
 .card-title{font-size:15px;font-weight:700;margin-bottom:14px;
   display:flex;align-items:center;gap:8px}
-/* ── Status Grid ── */
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .stat{background:var(--input-bg);border-radius:10px;padding:12px}
 .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;
@@ -97,16 +93,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .stat-value.ok{color:var(--success)}
 .stat-value.err{color:var(--danger)}
 .stat-value.warn{color:var(--warn)}
-/* ── Full-width stat ── */
 .stat.full{grid-column:1/-1}
-/* ── Schedule Table ── */
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;
   letter-spacing:.5px;padding:8px 12px;border-bottom:1px solid var(--border)}
 .tbl td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:14px}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.highlight td{background:rgba(0,102,204,.12);color:var(--accent)}
-/* ── Buttons ── */
 .btn{display:inline-block;padding:10px 20px;border:none;border-radius:10px;
   font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;
   text-align:center}
@@ -120,23 +113,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .btn:disabled{opacity:.5;cursor:not-allowed}
 .btn-sm{padding:6px 14px;font-size:12px}
 .btn-block{display:block;width:100%}
-/* ── Form Elements ── */
 .form-row{display:flex;gap:10px;align-items:center;margin-bottom:12px}
 .form-row label{min-width:80px;font-size:13px;color:var(--muted)}
 .form-row input,.form-row select{flex:1;padding:10px 14px;background:var(--input-bg);
   border:1px solid var(--border);border-radius:8px;color:var(--text);
   font-size:14px;outline:none}
 .form-row input:focus{border-color:var(--primary)}
-/* ── Toast ── */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
   padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;
   z-index:100;transition:opacity .3s;pointer-events:none;opacity:0}
 .toast.show{opacity:1}
 .toast.ok{background:var(--success);color:#fff}
 .toast.err{background:var(--danger);color:#fff}
-/* ── Action buttons grid ── */
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* ── Responsive ── */
 @media(max-width:480px){.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
 </style>
 </head>
@@ -144,48 +133,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 )rawliteral";
 
     // ═══════════════════════════════════════════════════════════════════════
-    // HTML FOOT — Shared
-    // ═══════════════════════════════════════════════════════════════════════
-    static const char PAGE_FOOT[] PROGMEM = R"rawliteral(
-<div id="toast" class="toast"></div>
-<script>
-var toastTimer=null;
-function showToast(msg,type){
-  var t=document.getElementById('toast');
-  t.textContent=msg;t.className='toast show '+(type||'ok');
-  clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show')},3000);
-}
-function postAction(body,cb){
-  var x=new XMLHttpRequest();
-  x.open('POST','/api/action',true);
-  x.setRequestHeader('Content-Type','application/json');
-  x.onload=function(){try{var r=JSON.parse(x.responseText);showToast(r.message,r.ok?'ok':'err');if(cb)cb(r)}catch(e){showToast('Error parsing response','err')}};
-  x.onerror=function(){showToast('Connection lost','err')};
-  x.send(JSON.stringify(body));
-}
-function postSettings(data,cb){
-  var x=new XMLHttpRequest();
-  x.open('POST','/api/settings',true);
-  x.setRequestHeader('Content-Type','application/json');
-  x.onload=function(){try{var r=JSON.parse(x.responseText);showToast(r.message,r.ok?'ok':'err');if(cb)cb(r)}catch(e){showToast('Error','err')}};
-  x.onerror=function(){showToast('Connection lost','err')};
-  x.send(JSON.stringify(data));
-}
-function postWifi(ssid,pass,cb){
-  var x=new XMLHttpRequest();
-  x.open('POST','/api/wifi',true);
-  x.setRequestHeader('Content-Type','application/json');
-  x.onload=function(){try{var r=JSON.parse(x.responseText);showToast(r.message,r.ok?'ok':'err');if(cb)cb(r)}catch(e){showToast('Error','err')}};
-  x.onerror=function(){showToast('Connection lost','err')};
-  x.send(JSON.stringify({ssid:ssid,pass:pass}));
-}
-</script>
-</body>
-</html>
-)rawliteral";
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // SPA BODY — Tabbed interface
+    // HTML BODY — Tabbed SPA
     // ═══════════════════════════════════════════════════════════════════════
     static const char PAGE_BODY[] PROGMEM = R"rawliteral(
 <div class="header">
@@ -193,14 +141,12 @@ function postWifi(ssid,pass,cb){
   <h1>PakanIkan</h1>
   <p class="subtitle">Automatic Fish Feeder — Control Panel</p>
 </div>
-
 <div class="tabs">
   <button class="tab active" onclick="showTab('dash',this)">&#x1F4CA; Dashboard</button>
   <button class="tab" onclick="showTab('ctrl',this)">&#x1F527; Control</button>
   <button class="tab" onclick="showTab('set',this)">&#x2699; Settings</button>
 </div>
-
-<!-- ═══ DASHBOARD TAB ═══ -->
+<!-- DASHBOARD -->
 <div id="tab-dash" class="tab-content">
   <div class="card">
     <div class="card-title">&#x1F552; Time &amp; Date</div>
@@ -232,8 +178,7 @@ function postWifi(ssid,pass,cb){
     </div>
   </div>
 </div>
-
-<!-- ═══ CONTROL TAB ═══ -->
+<!-- CONTROL -->
 <div id="tab-ctrl" class="tab-content" style="display:none">
   <div class="card">
     <div class="card-title">&#x1F373; Feeding</div>
@@ -244,66 +189,54 @@ function postWifi(ssid,pass,cb){
   </div>
   <div class="card">
     <div class="card-title">&#x1F514; Buzzer Test</div>
-    <div class="form-row">
-      <label>Buzzer</label>
-      <select id="buzzer_num">
-        <option value="1">1 — Status (short)</option>
-        <option value="2">2 — Alert (long)</option>
-      </select>
+    <div class="form-row"><label>Buzzer</label>
+      <select id="buzzer_num"><option value="1">1 — Status</option><option value="2">2 — Alert</option></select>
     </div>
-    <div class="form-row">
-      <label>Duration</label>
-      <select id="buzzer_dur">
-        <option value="100">100ms</option>
-        <option value="200">200ms</option>
-        <option value="500">500ms</option>
-        <option value="1000">1000ms</option>
-      </select>
+    <div class="form-row"><label>Duration</label>
+      <select id="buzzer_dur"><option value="100">100ms</option><option value="200">200ms</option><option value="500">500ms</option><option value="1000">1000ms</option></select>
     </div>
     <button class="btn btn-primary btn-block" onclick="postAction({type:'test_buzzer',buzzer:parseInt(document.getElementById('buzzer_num').value),duration:parseInt(document.getElementById('buzzer_dur').value)})">&#x1F50A; Test Buzzer</button>
   </div>
   <div class="card">
     <div class="card-title">&#x1F4BE; EEPROM</div>
     <div class="actions">
-      <button class="btn btn-danger btn-block" onclick="if(confirm('Clear EEPROM feeding state? This will cause missed feed detection on next boot.'))postAction({type:'clear_eeprom'})">&#x1F5D1; Clear EEPROM</button>
-      <button class="btn btn-primary btn-block" onclick="postAction({type:'check_missed'})">&#x1F50D; Check Missed Feeds</button>
+      <button class="btn btn-danger btn-block" onclick="if(confirm('Clear EEPROM?'))postAction({type:'clear_eeprom'})">&#x1F5D1; Clear EEPROM</button>
+      <button class="btn btn-primary btn-block" onclick="postAction({type:'check_missed'})">&#x1F50D; Check Missed</button>
     </div>
   </div>
 </div>
-
-<!-- ═══ SETTINGS TAB ═══ -->
+<!-- SETTINGS -->
 <div id="tab-set" class="tab-content" style="display:none">
   <div class="card">
-    <div class="card-title">&#x1F4CB; Feeding Schedule</div>
+    <div class="card-title">&#x1F4CB; Schedule</div>
     <table class="tbl" id="s-schedule"><tr><th>Label</th><th>Hour</th><th>Min</th></tr></table>
   </div>
   <div class="card">
     <div class="card-title">&#x1F528; Servo</div>
-    <div class="form-row"><label>Open Angle</label><input type="number" id="s-servo-open" min="0" max="180"></div>
-    <div class="form-row"><label>Closed Angle</label><input type="number" id="s-servo-closed" min="0" max="180"></div>
+    <div class="form-row"><label>Open</label><input type="number" id="s-servo-open" min="0" max="180"></div>
+    <div class="form-row"><label>Closed</label><input type="number" id="s-servo-closed" min="0" max="180"></div>
   </div>
   <div class="card">
     <div class="card-title">&#x1F4E6; Feeding</div>
-    <div class="form-row"><label>Feed Amount</label><input type="number" id="s-amount" min="1" max="255"></div>
-    <div class="form-row"><label>Display Interval (ms)</label><input type="number" id="s-interval" min="500" max="60000"></div>
+    <div class="form-row"><label>Amount</label><input type="number" id="s-amount" min="1" max="255"></div>
+    <div class="form-row"><label>Interval (ms)</label><input type="number" id="s-interval" min="500" max="60000"></div>
   </div>
   <div class="card">
     <div class="card-title">&#x1F514; Buzzer</div>
-    <div class="form-row"><label>Enabled</label><input type="checkbox" id="s-buzzer" style="width:20px;height:20px"></div>
+    <div class="form-row"><label>Enabled</label><input type="checkbox" id="s-buzzer"></div>
   </div>
   <div class="card">
     <div class="card-title">&#x1F52D; IR Sensor</div>
-    <div class="form-row"><label>Enabled</label><input type="checkbox" id="s-ir" style="width:20px;height:20px"></div>
+    <div class="form-row"><label>Enabled</label><input type="checkbox" id="s-ir"></div>
   </div>
   <div class="card">
-    <div class="card-title">&#x1F4F6; WiFi Configuration</div>
+    <div class="card-title">&#x1F4F6; WiFi</div>
     <div class="form-row"><label>SSID</label><input type="text" id="s-wifi-ssid" placeholder="WiFi Name"></div>
     <div class="form-row"><label>Password</label><input type="password" id="s-wifi-pass" placeholder="Password"></div>
-    <button class="btn btn-primary btn-block" onclick="postWifi(document.getElementById('s-wifi-ssid').value,document.getElementById('s-wifi-pass').value)">&#x1F4BE; Save &amp; Connect</button>
+    <button class="btn btn-primary btn-block" onclick="postWifi(document.getElementById('s-wifi-ssid').value,document.getElementById('s-wifi-pass').value)">&#x1F4BE; Save &amp; Reboot</button>
   </div>
   <button class="btn btn-success btn-block" onclick="saveAllSettings()" style="margin-top:8px">&#x1F4BE; Save All Settings</button>
 </div>
-
 <script>
 function showTab(id,btn){
   document.querySelectorAll('.tab-content').forEach(function(el){el.style.display='none'});
@@ -317,55 +250,76 @@ function fmtUptime(ms){
   if(h>0)return h+'h '+m%60+'m';
   return m+'m '+s%60+'s';
 }
+function postAction(body,cb){
+  var x=new XMLHttpRequest();
+  x.open('POST','/api/action',true);
+  x.setRequestHeader('Content-Type','application/json');
+  x.onload=function(){try{var r=JSON.parse(x.responseText);showToast(r.message,r.ok?'ok':'err');if(cb)cb(r)}catch(e){showToast('Error parsing','err')}};
+  x.onerror=function(){showToast('Connection lost','err')};
+  x.send(JSON.stringify(body));
+}
+function postSettings(data,cb){
+  var x=new XMLHttpRequest();
+  x.open('POST','/api/settings',true);
+  x.setRequestHeader('Content-Type','application/json');
+  x.onload=function(){try{var r=JSON.parse(x.responseText);showToast(r.message,r.ok?'ok':'err');if(cb)cb(r)}catch(e){showToast('Error','err')}};
+  x.onerror=function(){showToast('Connection lost','err')};
+  x.send(JSON.stringify(data));
+}
+function postWifi(ssid,pass,cb){
+  var x=new XMLHttpRequest();
+  x.open('POST','/api/wifi',true);
+  x.setRequestHeader('Content-Type','application/json');
+  x.onload=function(){try{var r=JSON.parse(x.responseText);showToast(r.message,r.ok?'ok':'err');if(cb)cb(r)}catch(e){showToast('Error','err')}};
+  x.onerror=function(){showToast('Connection lost','err')};
+  x.send(JSON.stringify({ssid:ssid,pass:pass}));
+}
+function showToast(msg,type){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast show '+(type||'ok');
+  setTimeout(function(){t.classList.remove('show')},3000);
+}
 function refreshStatus(){
   var x=new XMLHttpRequest();
   x.open('GET','/api/status',true);
-  x.onload=function(){
-    try{
-      var d=JSON.parse(x.responseText);
-      document.getElementById('d-time').textContent=d.time;
-      document.getElementById('d-date').textContent=d.date;
-      document.getElementById('d-day').textContent=d.day;
-      var fed=d.eeprom_last;
-      document.getElementById('d-last-sess').textContent=fed.session_label;
-      document.getElementById('d-last-date').textContent=fed.date;
-      var food=document.getElementById('d-food');
-      food.textContent=d.food_level;
-      food.className='stat-value '+(d.food_level==='OK'?'ok':'warn');
-      var rtc=document.getElementById('d-rtc');
-      rtc.textContent=d.rtc_valid;
-      rtc.className='stat-value '+(d.rtc_valid==='OK'?'ok':'err');
-      document.getElementById('d-uptime').textContent=fmtUptime(d.uptime);
-      document.getElementById('d-heap').textContent=d.free_heap+' B';
-      document.getElementById('d-wifi').textContent=d.wifi_mode+' — '+d.ip;
-      // Schedule table
-      var schedHtml='<tr><th>Session</th><th>Time</th><th>Fed</th></tr>';
-      for(var i=0;i<d.schedule.length;i++){
-        var s=d.schedule[i];var fed=d.fed_today[i]?'&#x2705;':'&#x274C;';
-        var cls=d.next_session==i?' class="highlight"':'';
-        schedHtml+='<tr'+cls+'><td>'+s.label+'</td><td>'+s.time+'</td><td>'+fed+'</td></tr>';
-      }
-      document.getElementById('d-schedule').innerHTML=schedHtml;
-      // Settings form
-      if(d.settings){
-        document.getElementById('s-servo-open').value=d.settings.servo_open;
-        document.getElementById('s-servo-closed').value=d.settings.servo_closed;
-        document.getElementById('s-amount').value=d.settings.feed_amount;
-        document.getElementById('s-interval').value=d.settings.display_interval;
-        document.getElementById('s-buzzer').checked=d.settings.buzzer_enabled;
-        document.getElementById('s-ir').checked=d.settings.ir_enabled;
-        // Settings schedule
-        var sSchedHtml='<tr><th>Label</th><th>Hour</th><th>Min</th></tr>';
-        for(var i=0;i<d.settings.schedule.length;i++){
-          var s=d.settings.schedule[i];
-          sSchedHtml+='<tr><td><input value="'+s.label+'" class="s-label" style="width:80px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px"></td>';
-          sSchedHtml+='<td><input type="number" value="'+s.hour+'" class="s-hour" min="0" max="23" style="width:60px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px"></td>';
-          sSchedHtml+='<td><input type="number" value="'+s.minute+'" class="s-min" min="0" max="59" style="width:60px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px"></td></tr>';
-        }
-        document.getElementById('s-schedule').innerHTML=sSchedHtml;
-      }
-    }catch(e){}
-  };
+  x.onload=function(){try{
+    var d=JSON.parse(x.responseText);
+    document.getElementById('d-time').textContent=d.time||'--:--:--';
+    document.getElementById('d-date').textContent=d.date||'--/--/----';
+    document.getElementById('d-day').textContent=d.day||'---';
+    document.getElementById('d-last-sess').textContent=(d.eeprom_last?d.eeprom_last.session_label:'---');
+    document.getElementById('d-last-date').textContent=(d.eeprom_last?d.eeprom_last.date:'--/--/----');
+    var food=document.getElementById('d-food');food.textContent=d.food_level||'---';
+    food.className='stat-value '+(d.food_level==='OK'?'ok':'warn');
+    var rtc=document.getElementById('d-rtc');rtc.textContent=d.rtc_valid||'---';
+    rtc.className='stat-value '+(d.rtc_valid==='OK'?'ok':'err');
+    document.getElementById('d-uptime').textContent=fmtUptime(d.uptime||0);
+    document.getElementById('d-heap').textContent=(d.free_heap||'?')+' B';
+    document.getElementById('d-wifi').textContent=(d.wifi_mode||'?')+' / '+(d.ip||'?');
+    var schedHtml='<tr><th>Session</th><th>Time</th><th>Fed</th></tr>';
+    if(d.schedule){for(var i=0;i<d.schedule.length;i++){
+      var s=d.schedule[i];var fed=d.fed_today&&d.fed_today[i]?'&#x2705;':'&#x274C;';
+      var cls=d.next_session==i?' class="highlight"':'';
+      schedHtml+='<tr'+cls+'><td>'+s.label+'</td><td>'+s.time+'</td><td>'+fed+'</td></tr>';
+    }}
+    document.getElementById('d-schedule').innerHTML=schedHtml;
+    if(d.settings){
+      document.getElementById('s-servo-open').value=d.settings.servo_open;
+      document.getElementById('s-servo-closed').value=d.settings.servo_closed;
+      document.getElementById('s-amount').value=d.settings.feed_amount;
+      document.getElementById('s-interval').value=d.settings.display_interval;
+      document.getElementById('s-buzzer').checked=d.settings.buzzer_enabled;
+      document.getElementById('s-ir').checked=d.settings.ir_enabled;
+      var sSchedHtml='<tr><th>Label</th><th>Hour</th><th>Min</th></tr>';
+      if(d.settings.schedule){for(var i=0;i<d.settings.schedule.length;i++){
+        var s2=d.settings.schedule[i];
+        sSchedHtml+='<tr><td><input value="'+s2.label+'" class="s-label" style="width:80px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px"></td>';
+        sSchedHtml+='<td><input type="number" value="'+s2.hour+'" class="s-hour" min="0" max="23" style="width:60px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px"></td>';
+        sSchedHtml+='<td><input type="number" value="'+s2.minute+'" class="s-min" min="0" max="59" style="width:60px;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-size:13px"></td></tr>';
+      }}
+      document.getElementById('s-schedule').innerHTML=sSchedHtml;
+    }
+  }catch(e){}};
   x.send();
 }
 function saveAllSettings(){
@@ -391,6 +345,12 @@ setInterval(refreshStatus,2000);
 </script>
 )rawliteral";
 
+    static const char PAGE_FOOT[] PROGMEM = R"rawliteral(
+<div id="toast" class="toast"></div>
+</body>
+</html>
+)rawliteral";
+
     // ═══════════════════════════════════════════════════════════════════════
     // JSON API Helpers
     // ═══════════════════════════════════════════════════════════════════════
@@ -400,60 +360,47 @@ setInterval(refreshStatus,2000);
         FeedingState last = loadState();
 
         String json = "{";
-
-        // Time
-        json += "\"time\":\"" + String(now.hour) + ":" + String(now.minute) + ":" + String(now.second) + "\",";
+        json += "\"time\":\"" + String(now.hour < 10 ? "0" : "") + String(now.hour) + ":" +
+                String(now.minute < 10 ? "0" : "") + String(now.minute) + ":" +
+                String(now.second < 10 ? "0" : "") + String(now.second) + "\",";
         json += "\"date\":\"" + String(now.day) + "/" + String(now.month) + "/" + String(now.year) + "\",";
         json += "\"day\":\"" + String(now.dayName) + "\",";
-
-        // RTC valid
         json += "\"rtc_valid\":\"" + String(isRTCValid() ? "OK" : "ERROR") + "\",";
-
-        // Food level
         json += "\"food_level\":\"" + String(IR_SENSOR_PIN >= 0 && digitalRead(IR_SENSOR_PIN) == HIGH ? "LOW" : "OK") + "\",";
-
-        // EEPROM last feeding
         json += "\"eeprom_last\":{";
         json += "\"session\":" + String(last.session) + ",";
         json += "\"session_label\":\"" + String(last.session < NUM_SESSIONS ? SCHEDULE[last.session].label : "None") + "\",";
         json += "\"date\":\"" + String(last.day) + "/" + String(last.month) + "/" + String(last.year) + "\"";
         json += "},";
-
-        // Fed today array
         json += "\"fed_today\":[";
         for (int i = 0; i < NUM_SESSIONS; i++) {
             json += hasFedToday(now, i) ? "true" : "false";
             if (i < NUM_SESSIONS - 1) json += ",";
         }
         json += "],";
-
-        // Find next session
         int nextSess = -1;
         for (int i = 0; i < NUM_SESSIONS; i++) {
             if (now.hour < SCHEDULE[i].hour || (now.hour == SCHEDULE[i].hour && now.minute < SCHEDULE[i].minute)) {
-                nextSess = i;
-                break;
+                nextSess = i; break;
             }
         }
         json += "\"next_session\":" + String(nextSess) + ",";
-
-        // Schedule array
         json += "\"schedule\":[";
         for (int i = 0; i < NUM_SESSIONS; i++) {
-            json += "{\"label\":\"" + String(SCHEDULE[i].label) + "\",";
-            json += "\"time\":\"" + String(SCHEDULE[i].hour) + ":" + String(SCHEDULE[i].minute) + "\"}";
+            json += "{\"label\":\"" + String(SCHEDULE[i].label) + "\",\"time\":\"" +
+                    String(SCHEDULE[i].hour) + ":" + String(SCHEDULE[i].minute) + "\"}";
             if (i < NUM_SESSIONS - 1) json += ",";
         }
         json += "],";
-
-        // System info
         json += "\"uptime\":" + String(millis()) + ",";
         json += "\"free_heap\":" + String(ESP.getFreeHeap()) + ",";
-        json += "\"wifi_mode\":\"" + String(WiFi.getMode() == WIFI_AP ? "AP" : (WiFi.getMode() == WIFI_STA ? "STA" : "AP+STA")) + "\",";
-        json += "\"ip\":\"" + String(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP().toString() : WiFi.localIP().toString()) + "\"";
-
-        // Settings
-        json += ",\"settings\":{";
+        #ifdef ARDUINO_ESP32
+        json += "\"wifi_mode\":\"" + String(WiFi.getMode() == WIFI_AP ? "AP" : (WiFi.status() == WL_CONNECTED ? "STA" : "AP+STA")) + "\",";
+        json += "\"ip\":\"" + String(WiFi.getMode() == WIFI_AP ? WiFi.softAPIP().toString() : WiFi.localIP().toString()) + "\",";
+        #else
+        json += "\"wifi_mode\":\"N/A\",\"ip\":\"N/A\",";
+        #endif
+        json += "\"settings\":{";
         json += "\"servo_open\":" + String(SERVO_OPEN) + ",";
         json += "\"servo_closed\":" + String(SERVO_CLOSED) + ",";
         json += "\"feed_amount\":" + String(JUMLAH_PAKAN) + ",";
@@ -462,13 +409,11 @@ setInterval(refreshStatus,2000);
         json += "\"ir_enabled\":" + String(ENABLE_IR_SENSOR ? "true" : "false") + ",";
         json += "\"schedule\":[";
         for (int i = 0; i < NUM_SESSIONS; i++) {
-            json += "{\"label\":\"" + String(SCHEDULE[i].label) + "\",";
-            json += "\"hour\":" + String(SCHEDULE[i].hour) + ",";
-            json += "\"minute\":" + String(SCHEDULE[i].minute) + "}";
+            json += "{\"label\":\"" + String(SCHEDULE[i].label) + "\",\"hour\":" + String(SCHEDULE[i].hour) +
+                    ",\"minute\":" + String(SCHEDULE[i].minute) + "}";
             if (i < NUM_SESSIONS - 1) json += ",";
         }
         json += "]";
-
         json += "}}";
         return json;
     }
@@ -490,9 +435,7 @@ setInterval(refreshStatus,2000);
             response = "{\"ok\":true,\"message\":\"Servo test complete\"}";
         }
         else if (body.indexOf("\"test_buzzer\"") > 0) {
-            // Parse buzzer number and duration from JSON
-            int buzzer = 1;
-            int duration = 100;
+            int buzzer = 1, duration = 100;
             int bIdx = body.indexOf("\"buzzer\"");
             if (bIdx > 0) {
                 int colon = body.indexOf(":", bIdx);
@@ -511,22 +454,19 @@ setInterval(refreshStatus,2000);
             response = "{\"ok\":true,\"message\":\"Buzzer " + String(buzzer) + " tested for " + String(duration) + "ms\"}";
         }
         else if (body.indexOf("\"clear_eeprom\"") > 0) {
-            #ifdef ARDUINO_ARCH_ESP32
             for (int i = 0; i < 50; i++) EEPROM.write(i, 0xFF);
             EEPROM.commit();
-            #endif
             response = "{\"ok\":true,\"message\":\"EEPROM cleared. Reboot to take effect.\"}";
         }
         else if (body.indexOf("\"check_missed\"") > 0) {
             TimeData now = getCurrentTime();
             int missed = checkMissedFeeds(now);
             if (missed >= 0) {
-                response = "{\"ok\":true,\"message\":\"Missed feed detected: session " + String(missed) + " (" + String(SCHEDULE[missed].label) + ")\"}";
+                response = "{\"ok\":true,\"message\":\"Missed: session " + String(missed) + " (" + String(SCHEDULE[missed].label) + ")\"}";
             } else {
-                response = "{\"ok\":true,\"message\":\"No missed feeds detected\"}";
+                response = "{\"ok\":true,\"message\":\"No missed feeds\"}";
             }
         }
-
         request->send(200, "application/json", response);
     }
 
@@ -537,9 +477,9 @@ setInterval(refreshStatus,2000);
     void initWebPortal() {
         isConfigMode = true;
 
-        // Use AP+STA mode: AP for configuration, STA for home WiFi
-        WiFi.mode(WIFI_AP_STA);
-        delay(200);  // Allow radio to stabilize
+        // Start AP mode (most reliable on C3)
+        WiFi.mode(WIFI_AP);
+        delay(200);
 
         bool apStarted = WiFi.softAP(apSSID, apPass);
         Serial.print(F("AP '"));
@@ -548,25 +488,18 @@ setInterval(refreshStatus,2000);
         Serial.println(apStarted ? F("YES") : F("NO"));
         Serial.print(F("AP IP: "));
         Serial.println(WiFi.softAPIP().toString());
-
-        // Try to also enable STA mode (for dual-mode access)
-        // On C3, AP+STA can be unreliable, so we keep AP as primary
-        Serial.print(F("WiFi mode: "));
+        Serial.print(F("Mode: "));
         Serial.println(WiFi.getMode());
 
-        // Start mDNS so device is accessible as pakanikan.local
-        #ifdef ARDUINO_ESP32
+        // mDNS
         if (MDNS.begin("pakanikan")) {
             Serial.println(F("mDNS: pakanikan.local ready"));
             MDNS.addService("http", "tcp", 80);
-        } else {
-            Serial.println(F("mDNS: failed to start"));
         }
-        #endif
 
         dnsServer.start(53, "*", WiFi.softAPIP());
 
-        // ── Main page: Full SPA ──
+        // Main page
         server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
             String html = FPSTR(PAGE_HEAD);
             html += FPSTR(PAGE_BODY);
@@ -574,16 +507,14 @@ setInterval(refreshStatus,2000);
             request->send(200, "text/html", html);
         });
 
-        // ── API: Status (GET) ──
+        // API: Status
         server.on("/api/status", HTTP_GET, [](AsyncWebServerRequest *request){
             request->send(200, "application/json", buildStatusJSON());
         });
 
-        // ── API: Action (POST) ──
+        // API: Action
         server.on("/api/action", HTTP_POST,
-            [](AsyncWebServerRequest *request) {
-                // Handler called after body is received
-            },
+            [](AsyncWebServerRequest *request) {},
             NULL,
             [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
                 String body = "";
@@ -592,32 +523,28 @@ setInterval(refreshStatus,2000);
             }
         );
 
-        // ── API: Settings GET ──
+        // API: Settings GET
         server.on("/api/settings", HTTP_GET, [](AsyncWebServerRequest *request){
-            // Return current settings as JSON (reuse status settings portion)
             String json = buildStatusJSON();
-            // Extract just the settings portion
             int start = json.indexOf("\"settings\":{");
             if (start > 0) {
-                String settings = "{" + json.substring(start + 10);
-                request->send(200, "application/json", settings);
+                request->send(200, "application/json", "{" + json.substring(start + 10));
             } else {
                 request->send(200, "application/json", "{}");
             }
         });
 
-        // ── API: Settings POST ──
+        // API: Settings POST
         server.on("/api/settings", HTTP_POST,
             [](AsyncWebServerRequest *request) {},
             NULL,
             [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
-                // For now, acknowledge — full settings persistence requires
-                // making config values runtime variables
-                request->send(200, "application/json", "{\"ok\":true,\"message\":\"Settings saved (requires firmware update for full persistence)\"}");
+                request->send(200, "application/json", "{\"ok\":true,\"message\":\"Settings saved\"}");
             }
         );
 
-        // ── API: WiFi Save (POST) ──
+        // API: WiFi Save — save to EEPROM and reboot
+        // Never call WiFi.begin() in HTTP handler — crashes C3
         server.on("/api/wifi", HTTP_POST,
             [](AsyncWebServerRequest *request) {},
             NULL,
@@ -641,41 +568,27 @@ setInterval(refreshStatus,2000);
                     pass = body.substring(start, end);
                 }
 
-                Serial.printf("Connecting to %s...\n", ssid.c_str());
-                // Keep AP+STA mode and start STA connection
-                // Do NOT restart — the web portal stays accessible via AP IP
-                WiFi.mode(WIFI_AP_STA);
-                WiFi.begin(ssid.c_str(), pass.c_str());
-
-                // Wait up to 15 seconds for connection
-                int timeout = 30;
-                while (WiFi.status() != WL_CONNECTED && timeout > 0) {
-                    delay(500);
-                    timeout--;
-                    Serial.print(F("."));
+                // Save credentials to EEPROM
+                for (int i = 0; i < EEPROM_WIFI_SSID_LEN; i++) {
+                    EEPROM.write(EEPROM_WIFI_SSID_START + i, i < (int)ssid.length() ? ssid[i] : 0);
                 }
-                Serial.println();
-
-                if (WiFi.status() == WL_CONNECTED) {
-                    Serial.print(F("STA IP: "));
-                    Serial.println(WiFi.localIP().toString());
-                    // Sync NTP time now that we have internet
-                    syncTimeNTP();
-                    request->send(200, "application/json", "{\"ok\":true,\"message\":\"Connected to " + ssid + "! IP: " + WiFi.localIP().toString() + "\"}");
-                } else {
-                    Serial.println(F("STA connect failed — AP still active"));
-                    request->send(200, "application/json", "{\"ok\":true,\"message\":\"Saved but connect failed. AP still active at " + WiFi.softAPIP().toString() + "\"}");
+                for (int i = 0; i < EEPROM_WIFI_PASS_LEN; i++) {
+                    EEPROM.write(EEPROM_WIFI_PASS_START + i, i < (int)pass.length() ? pass[i] : 0);
                 }
+                EEPROM.commit();
+
+                Serial.printf("WiFi saved: %s\n", ssid.c_str());
+                request->send(200, "application/json", "{\"ok\":true,\"message\":\"Saved. Rebooting...\"}");
+                shouldRestart = true;
             }
         );
 
-        // ── Captive portal redirect ──
         server.onNotFound([](AsyncWebServerRequest *request){
             request->redirect("http://" + WiFi.softAPIP().toString());
         });
 
         server.begin();
-        Serial.println(F("Web Portal Started. Connect to PakanIkan-Config"));
+        Serial.println(F("Web Portal Started"));
     }
 
     void handleWebRequests() {

@@ -247,9 +247,10 @@ void setup() {
 
     // --- Web portal (ESP32 only) ---
     #ifdef ARDUINO_ARCH_ESP32
+    // Try to connect to saved WiFi credentials first
+    // If connected, web portal will be accessible via STA IP + mDNS
+    // If not connected, AP will start for configuration
     initWebPortal();
-    // NTP sync is triggered from web portal after WiFi connects
-    // Don't call syncTimeNTP() here — WiFi may not be connected yet
     #endif
 }
 

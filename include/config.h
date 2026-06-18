@@ -21,6 +21,9 @@
 // ==========================================================================================
 // Pins are selected based on board architecture. ESP32 uses GPIO numbers,
 // Arduino Uno uses digital pin numbers.
+//
+// Use -1 for any pin that is not connected / not used.
+// Code checks for (PIN != -1) before using the pin.
 
 #ifdef ARDUINO_ARCH_ESP32
     // --- ESP32 WROOM Pins ---
@@ -42,12 +45,12 @@
     #ifdef ARDUINO_ESP32C3_DEV
         // --- ESP32-C3 Safe Pin Mapping ---
         #define BUTTON_PIN    0
-        #define SERVO_PIN     18
-        #define BUZZER_1_PIN  1      // Status Buzzer
-        #define BUZZER_2_PIN  2      // Alert Buzzer
-        #define IR_SENSOR_PIN 3      // Food Level Sensor
-        #define I2C_SDA_PIN   4      // I2C Data (LCD + RTC) — change to 18 for default
-        #define I2C_SCL_PIN   5      // I2C Clock (LCD + RTC) — change to 19 for default
+        #define SERVO_PIN     1
+        #define BUZZER_1_PIN  -1      // Status Buzzer
+        #define BUZZER_2_PIN  3     // Alert Buzzer
+        #define IR_SENSOR_PIN 2      // Food Level Sensor
+        #define I2C_SDA_PIN   8      // I2C Data (LCD + RTC) — change to 18 for default
+        #define I2C_SCL_PIN   9      // I2C Clock (LCD + RTC) — change to 19 for default
     #else
         // --- ESP32 WROOM Pin Mapping ---
         #define BUTTON_PIN    0
@@ -78,11 +81,11 @@
 // ==========================================================================================
 // Set ENABLE_BUZZERS to false to completely disable all buzzer output.
 // Useful for silent operation or when buzzers are not connected.
-#define ENABLE_BUZZERS false
+#define ENABLE_BUZZERS true
 
 // Set ENABLE_IR_SENSOR to false to completely disable the IR food level sensor.
 // Useful when the IR sensor is not connected or causing false triggers.
-#define ENABLE_IR_SENSOR false
+#define ENABLE_IR_SENSOR true
 
 // ==========================================================================================
 // SERVO SETTINGS
@@ -121,7 +124,6 @@ const FeedingSession SCHEDULE[] = {
     {"Siang", 12,  0},   // 12:00 — Afternoon feeding
     {"Sore",  18,  0},   // 18:00 — Evening feeding
     {"Malam", 21,  0},   // 21:00 — Night feeding
-    {"Test",  13,  0}    // 13:00 — Test feeding (remove in production)
 };
 
 // Total number of feeding sessions (auto-calculated from the array above).
@@ -129,7 +131,7 @@ const int NUM_SESSIONS = sizeof(SCHEDULE) / sizeof(SCHEDULE[0]);
 
 // Number of servo open/close cycles per feeding.
 // Each cycle dispenses a small amount of food. Total food ≈ JUMLAH_PAKAN × cycle_volume.
-const int JUMLAH_PAKAN = 100;
+const int JUMLAH_PAKAN = 10;
 
 // ==========================================================================================
 // EEPROM Settings Storage — Persistent configuration saved by web portal
@@ -151,6 +153,11 @@ const int JUMLAH_PAKAN = 100;
 #define EEPROM_SCHEDULE_START   20
 #define EEPROM_SCHEDULE_ENTRY_SIZE 10  // 8 bytes label + 1 byte hour + 1 byte minute
 #define EEPROM_SETTINGS_MAGIC_VAL 0xA5
+// WiFi credentials storage (after schedule area)
+#define EEPROM_WIFI_SSID_START   70
+#define EEPROM_WIFI_PASS_START   100
+#define EEPROM_WIFI_SSID_LEN     32
+#define EEPROM_WIFI_PASS_LEN     32
 
 // ==========================================================================================
 // DAY-OF-WEEK LABELS
