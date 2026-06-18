@@ -199,7 +199,6 @@ static void handleSerialCommand(char cmd) {
 
 void setup() {
     Serial.begin(115200);
-    Serial.setDebugOutput(false);
     delay(500);  // Allow USB-JTAG to stabilize after reset
     Serial.println(F("\n\n=== PakanIkanPLT Boot ==="));
 
