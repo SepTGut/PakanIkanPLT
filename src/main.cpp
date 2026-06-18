@@ -199,7 +199,8 @@ static void handleSerialCommand(char cmd) {
 
 void setup() {
     Serial.begin(115200);
-    delay(500);  // Allow USB-UART to stabilize after reset
+    Serial.setDebugOutput(false);
+    delay(500);  // Allow USB-JTAG to stabilize after reset
     Serial.println(F("\n\n=== PakanIkanPLT Boot ==="));
 
     // --- GPIO initialization ---
@@ -208,6 +209,11 @@ void setup() {
     pinMode(IR_SENSOR_PIN, INPUT);
     digitalWrite(BUZZER_1_PIN, LOW);
     digitalWrite(BUZZER_2_PIN, LOW);
+    // Heartbeat LED
+    #ifdef ARDUINO_ARCH_ESP32
+    pinMode(8, OUTPUT);
+    digitalWrite(8, LOW);
+    #endif
 
     // --- Subsystem initialization ---
     initRTC();
@@ -272,14 +278,17 @@ void handleManualButton() {
 void loop() {
     // --- Heartbeat LED — blinks to show board is alive ---
     // Helpful when USB-JTAG serial is disconnected after hard reset
-    // Only on WROOM (GPIO 8 is safe); C3 skips to avoid conflicts
-    #if defined(ARDUINO_ARCH_ESP32) && !defined(ARDUINO_ESP32C3_DEV)
+    #ifdef ARDUINO_ARCH_ESP32
     static unsigned long lastBlink = 0;
     static bool ledState = false;
     if (millis() - lastBlink >= 1000) {
         lastBlink = millis();
         ledState = !ledState;
-        digitalWrite(8, ledState);
+    #ifdef ARDUINO_ESP32C3_DEV
+        digitalWrite(8, ledState);  // C3 built-in LED on GPIO 8
+    #else
+        digitalWrite(8, ledState);  // WROOM external LED on GPIO 8
+    #endif
     }
     #endif
 
@@ -323,6 +332,13 @@ void loop() {
     }
 
     // --- Serial command handler ---
+    // On ESP32-C3, USB-JTAG may need re-init after hard reset
+    #ifdef ARDUINO_ESP32C3_DEV
+    if (!Serial) {
+        Serial.begin(115200);
+        Serial.setDebugOutput(false);
+    }
+    #endif
     if (Serial.available() > 0) {
         char cmd = Serial.read();
         markActivity();
