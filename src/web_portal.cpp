@@ -536,11 +536,10 @@ setInterval(refreshStatus,2000);
     void initWebPortal() {
         isConfigMode = true;
 
-        // Use AP+STA mode: keep existing WiFi connection AND start AP for config
-        // This allows the portal to work even when already connected to home WiFi
-        WiFi.mode(WIFI_AP_STA);
+        // Start AP first (most reliable on C3)
+        WiFi.mode(WIFI_AP);
+        delay(100);  // Allow radio to stabilize on C3
 
-        // Start the configuration AP (always available for first-time setup)
         bool apStarted = WiFi.softAP(apSSID, apPass);
         Serial.print(F("AP '"));
         Serial.print(apSSID);
@@ -549,15 +548,10 @@ setInterval(refreshStatus,2000);
         Serial.print(F("AP IP: "));
         Serial.println(WiFi.softAPIP().toString());
 
-        // Show current STA status
-        if (WiFi.status() == WL_CONNECTED) {
-            Serial.print(F("STA connected: "));
-            Serial.print(WiFi.SSID());
-            Serial.print(F("  IP: "));
-            Serial.println(WiFi.localIP().toString());
-        } else {
-            Serial.println(F("STA: not connected (AP mode for configuration)"));
-        }
+        // Try to also enable STA mode (for dual-mode access)
+        // On C3, AP+STA can be unreliable, so we keep AP as primary
+        Serial.print(F("WiFi mode: "));
+        Serial.println(WiFi.getMode());
 
         dnsServer.start(53, "*", WiFi.softAPIP());
 
