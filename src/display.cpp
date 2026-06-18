@@ -15,6 +15,9 @@
 
 #include "display.h"
 #include "config.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
+#endif
 
 // --- LCD instance (I2C address 0x27, 16 columns, 2 rows) ---
 LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -717,7 +720,8 @@ void updateDisplay(const TimeData& time) {
 
     if (currentMillis - previousMillis >= DISPLAY_INTERVAL) {
         previousMillis = currentMillis; displayMode++;
-        if (displayMode > NUM_SESSIONS) displayMode = 0;
+        // Modes: 0=date, 1..N=schedule, N+1=IP
+        if (displayMode > NUM_SESSIONS + 1) displayMode = 0;
     }
 
     if (displayMode != lastMode) {
@@ -725,9 +729,21 @@ void updateDisplay(const TimeData& time) {
         char tempBuffer[20], line1Buffer[17];
         if (displayMode == 0) {
             snprintf(tempBuffer, sizeof(tempBuffer), "%.3s,%02d/%02d/%d", time.dayName, time.day, time.month, time.year);
+        } else if (displayMode == NUM_SESSIONS + 1) {
+            // Show WiFi IP on the last mode
+            #ifdef ARDUINO_ARCH_ESP32
+            {
+                String ip = WiFi.getMode() == WIFI_AP ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
+                snprintf(tempBuffer, sizeof(tempBuffer), "IP: %s", ip.c_str());
+            }
+            #else
+            snprintf(tempBuffer, sizeof(tempBuffer), "WiFi: N/A");
+            #endif
         } else {
             int si = displayMode - 1;
-            snprintf(tempBuffer, sizeof(tempBuffer), "%s: %02d:%02d", SCHEDULE[si].label, SCHEDULE[si].hour, SCHEDULE[si].minute);
+            if (si >= 0 && si < NUM_SESSIONS) {
+                snprintf(tempBuffer, sizeof(tempBuffer), "%s: %02d:%02d", SCHEDULE[si].label, SCHEDULE[si].hour, SCHEDULE[si].minute);
+            }
         }
         snprintf(line1Buffer, sizeof(line1Buffer), "%-16s", tempBuffer);
         lcd.print(line1Buffer);

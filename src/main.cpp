@@ -335,7 +335,6 @@ void loop() {
     #ifdef ARDUINO_ESP32C3_DEV
     if (!Serial) {
         Serial.begin(115200);
-        Serial.setDebugOutput(false);
     }
     #endif
     if (Serial.available() > 0) {
