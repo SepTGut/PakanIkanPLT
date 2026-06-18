@@ -199,6 +199,8 @@ static void handleSerialCommand(char cmd) {
 
 void setup() {
     Serial.begin(115200);
+    delay(500);  // Allow USB-UART to stabilize after reset
+    Serial.println(F("\n\n=== PakanIkanPLT Boot ==="));
 
     // --- GPIO initialization ---
     pinMode(BUZZER_1_PIN, OUTPUT);
