@@ -53,7 +53,7 @@ void initRTC() {
 
     // Uncomment the following line to set the RTC to the compile-time date/time.
     // Only needed once — then re-upload with this line commented out.
-    // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 }
 
 bool isRTCValid() {
@@ -83,3 +83,39 @@ TimeData getCurrentTime() {
     }
     return cachedTime;
 }
+
+#ifdef ARDUINO_ARCH_ESP32
+void setRTCTimeFromEpoch(time_t epoch) {
+    struct tm timeinfo;
+    gmtime_r(&epoch, &timeinfo);
+
+    DateTime ntpTime(
+        timeinfo.tm_year + 1900,
+        timeinfo.tm_mon + 1,
+        timeinfo.tm_mday,
+        timeinfo.tm_hour,
+        timeinfo.tm_min,
+        timeinfo.tm_sec
+    );
+
+    rtc.adjust(ntpTime);
+
+    cachedTime.hour    = ntpTime.hour();
+    cachedTime.minute  = ntpTime.minute();
+    cachedTime.second  = ntpTime.second();
+    cachedTime.day     = ntpTime.day();
+    cachedTime.month   = ntpTime.month();
+    cachedTime.year    = ntpTime.year();
+    cachedTime.dayName = DAYS_OF_THE_WEEK[ntpTime.dayOfTheWeek()];
+    lastUpdate = millis();
+    rtcValidFlag = true;
+
+    Serial.print(F("RTC updated: "));
+    Serial.print(ntpTime.year()); Serial.print(F("-"));
+    Serial.print(ntpTime.month()); Serial.print(F("-"));
+    Serial.print(ntpTime.day()); Serial.print(F(" "));
+    Serial.print(ntpTime.hour()); Serial.print(F(":"));
+    Serial.print(ntpTime.minute()); Serial.print(F(":"));
+    Serial.println(ntpTime.second());
+}
+#endif

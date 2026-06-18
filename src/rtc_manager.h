@@ -49,4 +49,13 @@ bool isRTCValid();
  */
 TimeData getCurrentTime();
 
+#ifdef ARDUINO_ARCH_ESP32
+/**
+ * @brief Apply an NTP-synced time to the DS1307 RTC and prime the cache.
+ *        Call this after WiFi is connected and you have a valid UTC epoch.
+ * @param epoch  Unix timestamp (seconds since 1970-01-01 UTC)
+ */
+void setRTCTimeFromEpoch(time_t epoch);
+#endif
+
 #endif // RTC_MANAGER_H

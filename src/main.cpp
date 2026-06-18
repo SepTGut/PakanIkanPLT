@@ -40,6 +40,7 @@
 #include "state_debug.h"
 #include "alerts.h"
 #include "web_portal.h"
+#include "ntp_sync.h"
 
 // ==========================================================================================
 // BUTTON DEBOUNCE STATE
@@ -247,6 +248,8 @@ void setup() {
     // --- Web portal (ESP32 only) ---
     #ifdef ARDUINO_ARCH_ESP32
     initWebPortal();
+    // NTP sync is triggered from web portal after WiFi connects
+    // Don't call syncTimeNTP() here — WiFi may not be connected yet
     #endif
 }
 
@@ -349,6 +352,21 @@ void loop() {
         markActivity();
         handleSerialCommand(cmd);
     }
+
+    // --- NTP sync: initial + periodic (every 24 hours) ---
+    #ifdef ARDUINO_ARCH_ESP32
+    {
+        static unsigned long lastNTPCheck = 0;
+        static bool ntpSyncPending = true;
+        // Try to sync on first boot when WiFi connects, then every 24h
+        if (ntpSyncPending || (millis() - lastNTPCheck >= 86400000UL)) {
+            lastNTPCheck = millis();
+            if (syncTimeNTP()) {
+                ntpSyncPending = false;
+            }
+        }
+    }
+    #endif
 
     // --- Automatic feeding schedule ---
     // Check once per minute (when minute or day changes)
