@@ -87,7 +87,9 @@ TimeData getCurrentTime() {
 #ifdef ARDUINO_ARCH_ESP32
 void setRTCTimeFromEpoch(time_t epoch) {
     struct tm timeinfo;
-    gmtime_r(&epoch, &timeinfo);
+    // Use localtime_r (not gmtime_r) so the RTC gets local time (WIB/UTC+7).
+    // configTime() sets the timezone, so localtime_r automatically adds the offset.
+    localtime_r(&epoch, &timeinfo);
 
     DateTime ntpTime(
         timeinfo.tm_year + 1900,
