@@ -732,8 +732,17 @@ void updateDisplay(const TimeData& time) {
         } else if (displayMode == NUM_SESSIONS + 1) {
             // Show WiFi IP on the last mode
             #ifdef ARDUINO_ARCH_ESP32
-            String ip = (WiFi.getMode() == WIFI_AP) ? WiFi.softAPIP().toString() : WiFi.localIP().toString();
-            snprintf(tempBuffer, sizeof(tempBuffer), "IP: %s", ip.c_str());
+            {
+                String ip;
+                if (WiFi.getMode() == WIFI_AP) {
+                    ip = WiFi.softAPIP().toString();
+                } else if (WiFi.status() == WL_CONNECTED) {
+                    ip = WiFi.localIP().toString();
+                } else {
+                    ip = "No IP";
+                }
+                snprintf(tempBuffer, sizeof(tempBuffer), "IP: %s", ip.c_str());
+            }
             #else
             snprintf(tempBuffer, sizeof(tempBuffer), "WiFi: N/A");
             #endif

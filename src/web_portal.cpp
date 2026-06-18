@@ -22,6 +22,7 @@
 #include "config.h"
 #include "feeding.h"
 #include "rtc_manager.h"
+#include "ntp_sync.h"
 #include "state_debug.h"
 #include "alerts.h"
 #include "display.h"
@@ -553,6 +554,16 @@ setInterval(refreshStatus,2000);
         Serial.print(F("WiFi mode: "));
         Serial.println(WiFi.getMode());
 
+        // Start mDNS so device is accessible as pakanikan.local
+        #ifdef ARDUINO_ESP32
+        if (MDNS.begin("pakanikan")) {
+            Serial.println(F("mDNS: pakanikan.local ready"));
+            MDNS.addService("http", "tcp", 80);
+        } else {
+            Serial.println(F("mDNS: failed to start"));
+        }
+        #endif
+
         dnsServer.start(53, "*", WiFi.softAPIP());
 
         // ── Main page: Full SPA ──
@@ -631,12 +642,30 @@ setInterval(refreshStatus,2000);
                 }
 
                 Serial.printf("Connecting to %s...\n", ssid.c_str());
-                // Ensure STA mode is enabled for the connection
+                // Keep AP+STA mode and start STA connection
+                // Do NOT restart — the web portal stays accessible via AP IP
                 WiFi.mode(WIFI_AP_STA);
                 WiFi.begin(ssid.c_str(), pass.c_str());
 
-                request->send(200, "application/json", "{\"ok\":true,\"message\":\"WiFi saved. Connecting to " + ssid + "...\"}");
-                shouldRestart = true;
+                // Wait up to 15 seconds for connection
+                int timeout = 30;
+                while (WiFi.status() != WL_CONNECTED && timeout > 0) {
+                    delay(500);
+                    timeout--;
+                    Serial.print(F("."));
+                }
+                Serial.println();
+
+                if (WiFi.status() == WL_CONNECTED) {
+                    Serial.print(F("STA IP: "));
+                    Serial.println(WiFi.localIP().toString());
+                    // Sync NTP time now that we have internet
+                    syncTimeNTP();
+                    request->send(200, "application/json", "{\"ok\":true,\"message\":\"Connected to " + ssid + "! IP: " + WiFi.localIP().toString() + "\"}");
+                } else {
+                    Serial.println(F("STA connect failed — AP still active"));
+                    request->send(200, "application/json", "{\"ok\":true,\"message\":\"Saved but connect failed. AP still active at " + WiFi.softAPIP().toString() + "\"}");
+                }
             }
         );
 
