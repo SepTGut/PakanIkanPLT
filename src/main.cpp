@@ -270,6 +270,19 @@ void handleManualButton() {
 }
 
 void loop() {
+    // --- Heartbeat LED — blinks to show board is alive ---
+    // Helpful when USB-JTAG serial is disconnected after hard reset
+    // Only on WROOM (GPIO 8 is safe); C3 skips to avoid conflicts
+    #if defined(ARDUINO_ARCH_ESP32) && !defined(ARDUINO_ESP32C3_DEV)
+    static unsigned long lastBlink = 0;
+    static bool ledState = false;
+    if (millis() - lastBlink >= 1000) {
+        lastBlink = millis();
+        ledState = !ledState;
+        digitalWrite(8, ledState);
+    }
+    #endif
+
     // --- Buzzer state machine (non-blocking) ---
     handleBuzzer();
 

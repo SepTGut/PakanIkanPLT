@@ -661,11 +661,11 @@ void showCopyright() {
  *        copyright splash for 1.5 seconds. Backlight stays on throughout.
  */
 void playCopyrightAnimation() {
-    int rounds = 3 + fastRandom(3);
-    for (int i = 0; i < rounds; i++) playRandomAnimation();
+    // Show copyright splash only — skip blocking random animations
+    // to allow USB-JTAG to re-initialize quickly after reset
     lcd.clear();
     showCopyright();
-    delay(1500);
+    delay(1000);
     lcd.clear();
 }
 
