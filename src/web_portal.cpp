@@ -477,24 +477,52 @@ setInterval(refreshStatus,2000);
     void initWebPortal() {
         isConfigMode = true;
 
-        // Start AP mode (most reliable on C3)
-        WiFi.mode(WIFI_AP);
-        delay(200);
+        // Try to connect to saved WiFi credentials first
+        char savedSSID[EEPROM_WIFI_SSID_LEN + 1] = {0};
+        char savedPass[EEPROM_WIFI_PASS_LEN + 1] = {0};
+        for (int i = 0; i < EEPROM_WIFI_SSID_LEN; i++) {
+            savedSSID[i] = EEPROM.read(EEPROM_WIFI_SSID_START + i);
+            if (savedSSID[i] == 0) break;
+        }
+        for (int i = 0; i < EEPROM_WIFI_PASS_LEN; i++) {
+            savedPass[i] = EEPROM.read(EEPROM_WIFI_PASS_START + i);
+            if (savedPass[i] == 0) break;
+        }
 
-        bool apStarted = WiFi.softAP(apSSID, apPass);
-        Serial.print(F("AP '"));
-        Serial.print(apSSID);
-        Serial.print(F("' started: "));
-        Serial.println(apStarted ? F("YES") : F("NO"));
-        Serial.print(F("AP IP: "));
-        Serial.println(WiFi.softAPIP().toString());
-        Serial.print(F("Mode: "));
-        Serial.println(WiFi.getMode());
+        bool wifiConnected = false;
+        if (strlen(savedSSID) > 0) {
+            Serial.print(F("WiFi: trying "));
+            Serial.println(savedSSID);
+            WiFi.mode(WIFI_STA);
+            WiFi.begin(savedSSID, savedPass);
+            int timeout = 20;
+            while (WiFi.status() != WL_CONNECTED && timeout > 0) {
+                delay(500); timeout--; Serial.print(F("."));
+            }
+            Serial.println();
+            if (WiFi.status() == WL_CONNECTED) {
+                wifiConnected = true;
+                Serial.print(F("WiFi OK: "));
+                Serial.println(WiFi.localIP().toString());
+                syncTimeNTP();
+                if (MDNS.begin("pakanikan")) {
+                    Serial.println(F("mDNS: pakanikan.local"));
+                    MDNS.addService("http", "tcp", 80);
+                }
+            } else {
+                Serial.println(F("WiFi: failed"));
+            }
+        }
 
-        // mDNS
-        if (MDNS.begin("pakanikan")) {
-            Serial.println(F("mDNS: pakanikan.local ready"));
-            MDNS.addService("http", "tcp", 80);
+        // Always start AP as fallback (or primary if no saved WiFi)
+        if (!wifiConnected) {
+            WiFi.mode(WIFI_AP);
+            delay(200);
+            WiFi.softAP(apSSID, apPass);
+            Serial.print(F("AP: "));
+            Serial.print(apSSID);
+            Serial.print(F(" IP: "));
+            Serial.println(WiFi.softAPIP().toString());
         }
 
         dnsServer.start(53, "*", WiFi.softAPIP());
