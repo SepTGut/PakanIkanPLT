@@ -30,7 +30,7 @@
     // GPIO 0  : Built-in BOOT button (active LOW, internal pull-up)
     // GPIO 16 : Status buzzer
     // GPIO 17 : Alert buzzer
-    // GPIO 18 : Servo PWM
+    // GPIO 18 : Servo PWM 
     // GPIO 19 : IR sensor
     // GPIO 21 : I2C SDA (LCD + RTC)
     // GPIO 22 : I2C SCL (LCD + RTC)
@@ -44,13 +44,16 @@
 
     #ifdef ARDUINO_ESP32C3_DEV
         // --- ESP32-C3 Safe Pin Mapping ---
-        #define BUTTON_PIN    0
-        #define SERVO_PIN     1
-        #define BUZZER_1_PIN  -1      // Status Buzzer
-        #define BUZZER_2_PIN  3     // Alert Buzzer
-        #define IR_SENSOR_PIN 2      // Food Level Sensor
-        #define I2C_SDA_PIN   8      // I2C Data (LCD + RTC) — change to 18 for default
-        #define I2C_SCL_PIN   9      // I2C Clock (LCD + RTC) — change to 19 for default
+        // NOTE: GPIO 0,1,2,3 are strapping pins on C3 — avoid for outputs!
+        // GPIO 4,5,6,7,8,9,10 are safe general purpose
+        // GPIO 18,19,20,21 are also safe (default I2C/UART)
+        #define BUTTON_PIN    -1     // Button disabled (GPIO 0 is strapping pin)
+        #define SERVO_PIN     18     // Servo PWM (safe, LEDC capable)
+        #define BUZZER_1_PIN  -1     // Status Buzzer (disabled)
+        #define BUZZER_2_PIN  4      // Alert Buzzer (safe GPIO)
+        #define IR_SENSOR_PIN 5      // Food Level Sensor (safe GPIO)
+        #define I2C_SDA_PIN   8      // I2C Data (LCD + RTC)
+        #define I2C_SCL_PIN   9      // I2C Clock (LCD + RTC)
     #else
         // --- ESP32 WROOM Pin Mapping ---
         #define BUTTON_PIN    0
