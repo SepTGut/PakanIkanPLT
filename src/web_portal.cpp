@@ -477,41 +477,47 @@ setInterval(refreshStatus,2000);
     void initWebPortal() {
         isConfigMode = true;
 
-        // AP+STA mode: AP for config portal, STA to connect to saved/home WiFi
-        // Using AP+STA avoids mode-switch crashes on C3
-        WiFi.mode(WIFI_AP_STA);
+        // Disconnect any stale WiFi state (important for C3 after reboot)
+        WiFi.disconnect(true);
         delay(100);
 
-        // Start AP (always available)
-        WiFi.softAP(apSSID, apPass);
+        // Start AP mode (always reliable on C3)
+        WiFi.mode(WIFI_AP);
+        delay(200);
+
+        bool apStarted = WiFi.softAP(apSSID, apPass);
         Serial.print(F("AP: "));
         Serial.print(apSSID);
-        Serial.print(F(" IP: "));
+        Serial.print(F(" started: "));
+        Serial.println(apStarted ? F("YES") : F("NO"));
+        Serial.print(F("AP IP: "));
         Serial.println(WiFi.softAPIP().toString());
 
-        // Try to connect to home WiFi (non-blocking begin, nowhile loop)
-        // Credentials from config.h or EEPROM — connection happens in background
+        // Try to connect to home WiFi in background (non-blocking)
+        // Credentials from config.h or EEPROM
         #ifdef WIFI_SSID
-        // Use hardcoded credentials from config.h
         Serial.print(F("WiFi: connecting to "));
         Serial.println(F(WIFI_SSID));
         WiFi.begin(WIFI_SSID, WIFI_PASS);
         #else
-        // Try saved credentials from EEPROM
-        char savedSSID[EEPROM_WIFI_SSID_LEN + 1] = {0};
-        for (int i = 0; i < EEPROM_WIFI_SSID_LEN; i++) {
-            savedSSID[i] = EEPROM.read(EEPROM_WIFI_SSID_START + i);
-            if (savedSSID[i] == 0) break;
-        }
-        if (strlen(savedSSID) > 0) {
-            char savedPass[EEPROM_WIFI_PASS_LEN + 1] = {0};
-            for (int i = 0; i < EEPROM_WIFI_PASS_LEN; i++) {
-                savedPass[i] = EEPROM.read(EEPROM_WIFI_PASS_START + i);
-                if (savedPass[i] == 0) break;
+        {
+            char savedSSID[EEPROM_WIFI_SSID_LEN + 1] = {0};
+            for (int i = 0; i < EEPROM_WIFI_SSID_LEN; i++) {
+                savedSSID[i] = EEPROM.read(EEPROM_WIFI_SSID_START + i);
+                if (savedSSID[i] == 0) break;
             }
-            Serial.print(F("WiFi: trying "));
-            Serial.println(savedSSID);
-            WiFi.begin(savedSSID, savedPass);
+            if (strlen(savedSSID) > 0) {
+                char savedPass[EEPROM_WIFI_PASS_LEN + 1] = {0};
+                for (int i = 0; i < EEPROM_WIFI_PASS_LEN; i++) {
+                    savedPass[i] = EEPROM.read(EEPROM_WIFI_PASS_START + i);
+                    if (savedPass[i] == 0) break;
+                }
+                Serial.print(F("WiFi: trying "));
+                Serial.println(savedSSID);
+                WiFi.begin(savedSSID, savedPass);
+            } else {
+                Serial.println(F("WiFi: no saved credentials"));
+            }
         }
         #endif
 

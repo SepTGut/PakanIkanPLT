@@ -357,36 +357,34 @@ void loop() {
         handleSerialCommand(cmd);
     }
 
-    // --- NTP sync: try every 60s until connected, then every 24h ---
+    // --- NTP sync: retry frequently at start, then every 24h ---
     // Uses gentle logging: only prints status every 5 seconds when disconnected
     #ifdef ARDUINO_ARCH_ESP32
     {
         static unsigned long lastNTPCheck = 0;
         static unsigned long lastNTPLog = 0;
         static bool ntpSyncDone = false;
+        // Faster retry for first 5 minutes (every 10s), then every 60s
+        unsigned long retryInterval = (millis() < 300000UL) ? 10000UL : 60000UL;
         unsigned long nowMs = millis();
 
-        if (!ntpSyncDone && (nowMs - lastNTPCheck >= 60000UL)) {
-            // Retry every 60 seconds until synced
+        if (!ntpSyncDone && (nowMs - lastNTPCheck >= retryInterval)) {
             lastNTPCheck = nowMs;
             if (syncTimeNTP()) {
                 ntpSyncDone = true;
-                lastNTPCheck = nowMs;
             } else if (nowMs - lastNTPLog >= 5000UL) {
-                // Gentle: only print every 5 seconds
                 lastNTPLog = nowMs;
                 Serial.println(F("NTP: waiting for WiFi..."));
             }
         } else if (ntpSyncDone && (nowMs - lastNTPCheck >= 86400000UL)) {
-            // Re-sync every 24 hours
             lastNTPCheck = nowMs;
             syncTimeNTP();
         }
 
-        // Start mDNS once WiFi is connected (and not already started)
-        if (!ntpSyncDone && WiFi.status() == WL_CONNECTED) {
-            static bool mdnsStarted = false;
-            if (!mdnsStarted && MDNS.begin("pakanikan")) {
+        // Start mDNS once WiFi is connected (independent of NTP status)
+        static bool mdnsStarted = false;
+        if (!mdnsStarted && WiFi.status() == WL_CONNECTED) {
+            if (MDNS.begin("pakanikan")) {
                 mdnsStarted = true;
                 Serial.println(F("mDNS: pakanikan.local"));
                 MDNS.addService("http", "tcp", 80);
