@@ -77,6 +77,14 @@
 #endif
 
 // ==========================================================================================
+// DEFAULT WiFi CREDENTIALS (used if no saved credentials in EEPROM)
+// ==========================================================================================
+// Set these to your home WiFi credentials to auto-connect on boot.
+// Leave empty to always start the AP for configuration.
+// #define WIFI_SSID "YourWiFiName"
+// #define WIFI_PASS "YourWiFiPassword"
+
+// ==========================================================================================
 // FEATURE TOGGLES
 // ==========================================================================================
 // Set ENABLE_BUZZERS to false to completely disable all buzzer output.

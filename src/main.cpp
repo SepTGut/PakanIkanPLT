@@ -41,6 +41,9 @@
 #include "alerts.h"
 #include "web_portal.h"
 #include "ntp_sync.h"
+#ifdef ARDUINO_ARCH_ESP32
+#include <ESPmDNS.h>
+#endif
 
 // ==========================================================================================
 // BUTTON DEBOUNCE STATE
@@ -354,16 +357,39 @@ void loop() {
         handleSerialCommand(cmd);
     }
 
-    // --- NTP sync: initial + periodic (every 24 hours) ---
+    // --- NTP sync: try every 60s until connected, then every 24h ---
+    // Uses gentle logging: only prints status every 5 seconds when disconnected
     #ifdef ARDUINO_ARCH_ESP32
     {
         static unsigned long lastNTPCheck = 0;
-        static bool ntpSyncPending = true;
-        // Try to sync on first boot when WiFi connects, then every 24h
-        if (ntpSyncPending || (millis() - lastNTPCheck >= 86400000UL)) {
-            lastNTPCheck = millis();
+        static unsigned long lastNTPLog = 0;
+        static bool ntpSyncDone = false;
+        unsigned long nowMs = millis();
+
+        if (!ntpSyncDone && (nowMs - lastNTPCheck >= 60000UL)) {
+            // Retry every 60 seconds until synced
+            lastNTPCheck = nowMs;
             if (syncTimeNTP()) {
-                ntpSyncPending = false;
+                ntpSyncDone = true;
+                lastNTPCheck = nowMs;
+            } else if (nowMs - lastNTPLog >= 5000UL) {
+                // Gentle: only print every 5 seconds
+                lastNTPLog = nowMs;
+                Serial.println(F("NTP: waiting for WiFi..."));
+            }
+        } else if (ntpSyncDone && (nowMs - lastNTPCheck >= 86400000UL)) {
+            // Re-sync every 24 hours
+            lastNTPCheck = nowMs;
+            syncTimeNTP();
+        }
+
+        // Start mDNS once WiFi is connected (and not already started)
+        if (!ntpSyncDone && WiFi.status() == WL_CONNECTED) {
+            static bool mdnsStarted = false;
+            if (!mdnsStarted && MDNS.begin("pakanikan")) {
+                mdnsStarted = true;
+                Serial.println(F("mDNS: pakanikan.local"));
+                MDNS.addService("http", "tcp", 80);
             }
         }
     }
