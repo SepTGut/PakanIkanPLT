@@ -44,18 +44,21 @@
 
     #ifdef ARDUINO_ESP32C3_DEV
         // --- ESP32-C3 Safe Pin Mapping ---
-        // NOTE: GPIO 0,1,2,3 are strapping pins on C3 — avoid for outputs!
-        // GPIO 4,5,6,7,8,9,10 are safe general purpose
-        // GPIO 18,19,20,21 are also safe (default I2C/UART)
-        #define BUTTON_PIN    -1     // Button disabled (GPIO 0 is strapping pin)
+        // GPIO 0,1,2,3 = strapping pins (boot mode, avoid!)
+        // GPIO 4,5,6,7,10 = safe general purpose
+        // GPIO 8,9 = I2C (safe)
+        // GPIO 18,19,20,21 = safe (default I2C/UART)
+        #define BUTTON_PIN    -1     // Disabled (GPIO 0 is strapping)
         #define SERVO_PIN     18     // Servo PWM (safe, LEDC capable)
         #define BUZZER_1_PIN  -1     // Status Buzzer (disabled)
         #define BUZZER_2_PIN  4      // Alert Buzzer (safe GPIO)
         #define IR_SENSOR_PIN 5      // Food Level Sensor (safe GPIO)
         #define I2C_SDA_PIN   8      // I2C Data (LCD + RTC)
         #define I2C_SCL_PIN   9      // I2C Clock (LCD + RTC)
+        #define HEARTBEAT_LED_PIN -1  // Disabled (GPIO 8 = I2C SDA, conflict)
     #else
         // --- ESP32 WROOM Pin Mapping ---
+        #define HEARTBEAT_LED_PIN 8  // Heartbeat LED on GPIO 8
         #define BUTTON_PIN    0
         #define SERVO_PIN     18
         #define BUZZER_1_PIN  16     // Status Buzzer
@@ -72,6 +75,7 @@
     // Pin 6  : Alert buzzer
     // Pin 3  : IR sensor input
     // I2C uses fixed hardware pins: A4=SDA, A5=SCL (not configurable on AVR)
+    #define HEARTBEAT_LED_PIN -1  // No heartbeat LED on Uno
     #define BUTTON_PIN    2
     #define SERVO_PIN     4
     #define BUZZER_1_PIN  5

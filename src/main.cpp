@@ -42,6 +42,7 @@
 #include "web_portal.h"
 #include "ntp_sync.h"
 #ifdef ARDUINO_ARCH_ESP32
+#include <WiFi.h>
 #include <ESPmDNS.h>
 #endif
 
@@ -218,10 +219,12 @@ void setup() {
     if (BUZZER_1_PIN >= 0) { pinMode(BUZZER_1_PIN, OUTPUT); digitalWrite(BUZZER_1_PIN, LOW); }
     if (BUZZER_2_PIN >= 0) { pinMode(BUZZER_2_PIN, OUTPUT); digitalWrite(BUZZER_2_PIN, LOW); }
     if (IR_SENSOR_PIN >= 0) pinMode(IR_SENSOR_PIN, INPUT);
-    // Heartbeat LED
+    // Heartbeat LED (use HEARTBEAT_LED_PIN, -1 = disabled)
     #ifdef ARDUINO_ARCH_ESP32
-    pinMode(8, OUTPUT);
-    digitalWrite(8, LOW);
+    #if HEARTBEAT_LED_PIN >= 0
+    pinMode(HEARTBEAT_LED_PIN, OUTPUT);
+    digitalWrite(HEARTBEAT_LED_PIN, LOW);
+    #endif
     #endif
 
     // --- Subsystem initialization ---
@@ -290,19 +293,17 @@ void handleManualButton() {
 
 void loop() {
     // --- Heartbeat LED — blinks to show board is alive ---
-    // Helpful when USB-JTAG serial is disconnected after hard reset
+    // Disabled on C3 because GPIO 8 = I2C_SDA (conflict)
     #ifdef ARDUINO_ARCH_ESP32
+    #if HEARTBEAT_LED_PIN >= 0
     static unsigned long lastBlink = 0;
     static bool ledState = false;
     if (millis() - lastBlink >= 1000) {
         lastBlink = millis();
         ledState = !ledState;
-    #ifdef ARDUINO_ESP32C3_DEV
-        digitalWrite(8, ledState);  // C3 built-in LED on GPIO 8
-    #else
-        digitalWrite(8, ledState);  // WROOM external LED on GPIO 8
-    #endif
+        digitalWrite(HEARTBEAT_LED_PIN, ledState);
     }
+    #endif
     #endif
 
     // --- Buzzer state machine (non-blocking) ---

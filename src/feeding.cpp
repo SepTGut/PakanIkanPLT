@@ -65,6 +65,7 @@ void initFeeding() {
     EEPROM.begin(512);  // Allocate 512 bytes for EEPROM emulation
     #endif
 
+    if (SERVO_PIN < 0) return;  // Servo disabled
     servoMekanik.attach(SERVO_PIN);
     servoMekanik.write(SERVO_CLOSED);
     delay(100);
